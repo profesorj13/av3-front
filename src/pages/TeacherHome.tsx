@@ -1,8 +1,10 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '@/store/useStore';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { AnimatedOrb } from '@/components/ui/AnimatedOrb';
+import { ArrowRight } from 'lucide-react';
 import { api } from '@/services/api';
 import type { CourseSubject } from '@/types';
 
@@ -30,42 +32,53 @@ export function TeacherHome() {
   const teacherCourses = courseSubjects.filter((cs) => cs.teacher_id === teacherId);
 
   return (
-    <div className="max-w-6xl mx-auto">
-      <div className="flex items-center gap-6 mb-8">
-        <div className="w-20 h-20 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-3xl font-bold">
-          {firstName.charAt(0)}
-        </div>
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900">Hola {firstName},</h1>
-          <p className="text-slate-600">¿en qué materia trabajamos hoy?</p>
-        </div>
+    <div className="flex flex-col items-center justify-start min-h-full px-6 py-12">
+      <div className="flex flex-col items-center mb-16 mt-8">
+        <AnimatedOrb size="lg" className="mb-8" />
+
+        <h2 className="large-title-1-regular text-primary">Hola {firstName},</h2>
+        <h3 className="large-title-2-regular">¿En qué materia trabajamos hoy?</h3>
       </div>
 
-      <div>
-        <h2 className="text-xl font-semibold text-slate-900 mb-4">Mis Materias</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="w-full max-w-5xl">
+        <h2 className="text-xl font-semibold text-secondary-foreground mb-6 px-4">Mis materias</h2>
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-4 px-4">
           {teacherCourses.map((cs) => (
             <Card
               key={cs.id}
-              className="cursor-pointer hover:shadow-lg transition-shadow"
+              className="cursor-pointer hover:shadow-lg transition-all bg-white/80 backdrop-blur-sm border-slate-200 p-4 group rounded-3xl"
               onClick={() => navigate(`/teacher/cs/${cs.id}`)}
             >
-              <CardHeader>
-                <div className="flex items-start justify-between mb-2">
-                  <Badge variant="secondary">{cs.course_name}</Badge>
+              <div className="flex flex-col h-full gap-4">
+                {/* Header con curso y estado */}
+                <div className="flex items-center justify-between">
+                  <span className="body-2-regular text-foreground">{cs.course_name}</span>
+                  <Badge
+                    variant="secondary"
+                    className="bg-[#01CEAA4D] text-secondary-foreground hover:bg-[#01CEAA4D] rounded-xl px-4 py-1.5"
+                  >
+                    Activo
+                  </Badge>
                 </div>
-                <CardTitle className="text-lg">{cs.subject_name}</CardTitle>
-                <CardDescription className="text-sm">Click para ver detalles y planificar clases</CardDescription>
-              </CardHeader>
+
+                {/* Título de la materia */}
+                <h3 className="large-title-2-bold text-foreground">{cs.subject_name}</h3>
+
+                {/* Descripción */}
+                <p className="body-1-regular text-muted-foreground">Planificar y gestionar clases</p>
+
+                {/* Flecha */}
+                <div className="mt-auto flex justify-end">
+                  <ArrowRight className="w-8 h-8 text-secondary-foreground group-hover:translate-x-1 transition-all" />
+                </div>
+              </div>
             </Card>
           ))}
         </div>
 
         {teacherCourses.length === 0 && (
-          <Card>
-            <CardContent className="py-12 text-center">
-              <p className="text-slate-500">No tienes materias asignadas</p>
-            </CardContent>
+          <Card className="bg-white/80 backdrop-blur-sm border-slate-200 rounded-3xl p-8">
+            <p className="body-1-regular text-muted-foreground text-center">No tienes materias asignadas</p>
           </Card>
         )}
       </div>

@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { Users, GraduationCap, Calendar, ArrowRight } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { api } from '@/services/api';
@@ -83,134 +83,139 @@ export function TeacherCourseSubject() {
     lessonPlanMap[lp.class_number] = lp;
   });
 
+  const getInitials = (name: string) => {
+    const parts = name.split(' ');
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  };
+
   return (
-    <div className="max-w-6xl mx-auto">
-      <Button variant="ghost" className="mb-4" onClick={() => navigate('/')}>
-        <ArrowLeft className="mr-2 h-4 w-4" />
+    <div className="max-w-6xl mx-auto px-6 py-8">
+      <h1 className="large-title-2-bold text-foreground mb-6">
         {cs.course_name} - {cs.subject_name}
-      </Button>
+      </h1>
 
       <Tabs defaultValue="about" className="w-full">
-        <TabsList>
-          <TabsTrigger value="about">Sobre el curso</TabsTrigger>
-          <TabsTrigger value="classes">Clases</TabsTrigger>
+        <TabsList className="mb-8">
+          <TabsTrigger value="about">Detalle del curso</TabsTrigger>
+          <TabsTrigger value="classes">Mis clases</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="about" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Alumnos</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {students.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No hay alumnos registrados</p>
-                ) : (
-                  <ul className="space-y-2">
-                    {students.map((s) => (
-                      <li key={s.id} className="text-sm">
-                        {s.name}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </CardContent>
-            </Card>
+        <TabsContent value="about" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Alumnos Section */}
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <Users className="w-5 h-5 text-foreground" />
+                <h2 className="headline-1-bold text-foreground">Alumnos</h2>
+                <span className="callout-regular text-muted-foreground">({students.length})</span>
+              </div>
 
-            <div className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Detalles</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <p className="text-sm">
-                    <strong>Curso:</strong> {cs.course_name}
-                  </p>
-                  <p className="text-sm">
-                    <strong>Materia:</strong> {cs.subject_name}
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Grilla de horarios</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {Object.keys(schedule).length === 0 ? (
-                    <p className="text-sm text-muted-foreground">No hay horarios definidos</p>
+              <Card className="bg-white/50 backdrop-blur-sm border-slate-200 rounded-3xl p-6">
+                <div className="space-y-2">
+                  {students.length === 0 ? (
+                    <p className="body-2-regular text-muted-foreground">No hay alumnos registrados</p>
                   ) : (
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr className="border-b">
-                            <th className="text-left p-2">Hora</th>
-                            {days.map((d) => (
-                              <th key={d} className="text-left p-2">
-                                {dayNames[d]}
-                              </th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr className="border-b">
-                            <td className="p-2">08:00-09:30</td>
-                            {days.map((d) => (
-                              <td key={d} className="p-2">
-                                {schedule[d]?.[0]?.subject || '-'}
-                              </td>
-                            ))}
-                          </tr>
-                          <tr className="border-b">
-                            <td className="p-2">09:45-11:15</td>
-                            {days.map((d) => (
-                              <td key={d} className="p-2">
-                                {schedule[d]?.[1]?.subject || '-'}
-                              </td>
-                            ))}
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
+                    students.map((student) => (
+                      <div
+                        key={student.id}
+                        className="flex items-center justify-between p-3 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full flex items-center justify-center font-semibold bg-violet-200 text-violet-700">
+                            {getInitials(student.name)}
+                          </div>
+                          <div>
+                            <p className="body-2-medium text-foreground">{student.name}</p>
+                            <p className="callout-regular text-muted-foreground">
+                              {student.name.toLowerCase().replace(/\s+/g, '')}@Gmail.Com
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))
                   )}
-                </CardContent>
+                </div>
               </Card>
+            </div>
+
+            {/* Sobre el curso Section */}
+            <div className="space-y-6">
+              <div>
+                <div className="flex items-center gap-2 mb-4">
+                  <GraduationCap className="w-5 h-5 text-foreground" />
+                  <h2 className="headline-1-bold text-foreground">Sobre el curso</h2>
+                </div>
+
+                <Card className="bg-white/50 backdrop-blur-sm border-slate-200 rounded-3xl p-6">
+                  <div className="space-y-4">
+                    <div className="pb-4 border-b border-slate-200">
+                      <p className="callout-bold text-foreground mb-1">CURSO</p>
+                      <p className="body-2-regular text-foreground">{cs.course_name}</p>
+                    </div>
+
+                    <div>
+                      <p className="callout-bold text-foreground mb-1">MATERIA</p>
+                      <p className="body-2-regular text-foreground">{cs.subject_name}</p>
+                    </div>
+                  </div>
+                </Card>
+              </div>
+
+              {/* Grilla de horarios Card */}
+              <div>
+                <div className="flex items-center gap-2 mb-4">
+                  <Calendar className="w-5 h-5 text-foreground" />
+                  <h2 className="headline-1-bold text-foreground">Grilla de horarios</h2>
+                </div>
+
+                <Card className="bg-white/50 backdrop-blur-sm border-slate-200 rounded-3xl p-6 cursor-pointer hover:shadow-lg transition-all group">
+                  <div className="flex items-center justify-between">
+                    <span className="body-2-medium text-foreground">Ver horarios del curso</span>
+                    <ArrowRight className="w-5 h-5 text-foreground group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </Card>
+              </div>
             </div>
           </div>
         </TabsContent>
 
-        <TabsContent value="classes" className="space-y-4">
+        <TabsContent value="classes" className="space-y-6">
           {!coordStatus?.has_published_document ? (
-            <Card>
+            <Card className="bg-white/50 backdrop-blur-sm border-slate-200 rounded-3xl">
               <CardContent className="py-12 text-center">
                 <div className="text-6xl mb-4">📋</div>
-                <h3 className="text-xl font-semibold mb-2">Documento de coordinación no disponible</h3>
-                <p className="text-muted-foreground mb-2">
+                <h3 className="headline-1-bold text-foreground mb-2">Documento de coordinación no disponible</h3>
+                <p className="body-1-regular text-muted-foreground mb-2">
                   El coordinador aún no ha publicado el documento de coordinación para esta materia.
                 </p>
-                <p className="text-sm text-muted-foreground">Contacta al coordinador para más información.</p>
+                <p className="body-2-regular text-muted-foreground">Contacta al coordinador para más información.</p>
               </CardContent>
             </Card>
           ) : (
             <>
-              <div className="mb-4">
-                <h3 className="text-xl font-semibold">Plan de clases</h3>
-                <p className="text-sm text-muted-foreground">
+              <div>
+                <h3 className="headline-1-bold text-foreground mb-2">Plan de clases</h3>
+                <p className="body-2-regular text-muted-foreground">
                   Documento: {coordStatus.document_name} | Coordinador: {coordStatus.coordinator_name || 'N/A'}
                 </p>
               </div>
 
               <div className="space-y-3">
                 {(coordStatus.class_plan || []).length === 0 ? (
-                  <p className="text-muted-foreground">No hay clases definidas en el documento de coordinación</p>
+                  <p className="body-1-regular text-muted-foreground">
+                    No hay clases definidas en el documento de coordinación
+                  </p>
                 ) : (
                   (coordStatus.class_plan || []).map((c: any) => {
                     const existingPlan = lessonPlanMap[c.class_number];
                     const statusClass = existingPlan
                       ? existingPlan.status === 'planned'
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-yellow-100 text-yellow-800'
-                      : 'bg-gray-100 text-gray-800';
+                        ? 'bg-green-100 text-green-800 hover:bg-green-100'
+                        : 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100'
+                      : 'bg-gray-100 text-gray-800 hover:bg-gray-100';
                     const statusLabel = existingPlan
                       ? existingPlan.status === 'planned'
                         ? 'Planificada'
@@ -223,18 +228,20 @@ export function TeacherCourseSubject() {
                     });
 
                     return (
-                      <Card key={c.class_number}>
-                        <CardContent className="p-4">
+                      <Card key={c.class_number} className="bg-white/50 backdrop-blur-sm border-slate-200 rounded-3xl">
+                        <CardContent className="p-6">
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-2">
-                                <Badge variant="outline">Clase {c.class_number}</Badge>
+                              <div className="flex items-center gap-2 mb-3">
+                                <Badge variant="outline" className="rounded-xl">
+                                  Clase {c.class_number}
+                                </Badge>
                                 <Badge className={statusClass}>{statusLabel}</Badge>
                               </div>
-                              <h4 className="font-semibold mb-2">{c.title || 'Sin título'}</h4>
-                              <div className="flex flex-wrap gap-1">
+                              <h4 className="headline-1-bold text-foreground mb-3">{c.title || 'Sin título'}</h4>
+                              <div className="flex flex-wrap gap-2">
                                 {categoryNames.map((name: string, idx: number) => (
-                                  <Badge key={idx} variant="secondary" className="text-xs">
+                                  <Badge key={idx} variant="secondary" className="rounded-xl">
                                     {name}
                                   </Badge>
                                 ))}

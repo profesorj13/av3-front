@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { Users, GraduationCap, Calendar, ArrowRight } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { api } from '@/services/api';
@@ -19,15 +19,13 @@ export function Course() {
   const navigate = useNavigate();
   const courseId = parseInt(id || '0');
 
-  const { courses, subjects } = useStore();
+  const { courses } = useStore();
   const getUserArea = useStore((state) => state.getUserArea());
 
   const [students, setStudents] = useState<Student[]>([]);
   const [areaDocs, setAreaDocs] = useState<CoordinationDocument[]>([]);
-  const [loading, setLoading] = useState(true);
 
   const course = courses.find((c) => c.id === courseId);
-  const areaSubjects = getUserArea ? subjects.filter((s) => s.area_id === getUserArea.id) : [];
 
   useEffect(() => {
     loadCourseData();
@@ -35,7 +33,6 @@ export function Course() {
 
   const loadCourseData = async () => {
     try {
-      setLoading(true);
       const [studentsData, allDocs] = await Promise.all([api.courses.getStudents(courseId), api.documents.getAll()]);
 
       setStudents(studentsData as Student[]);
@@ -46,8 +43,6 @@ export function Course() {
       }
     } catch (error) {
       console.error('Error loading course data:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -79,189 +74,205 @@ export function Course() {
     return <div>Curso no encontrado</div>;
   }
 
-  const statusLabels: Record<string, string> = {
-    draft: 'Borrador',
-    published: 'Publicado',
-    archived: 'Archivado',
+  const getInitials = (name: string) => {
+    const parts = name.split(' ');
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
   };
 
-  const statusColors: Record<string, string> = {
-    draft: 'bg-amber-100 text-amber-800',
-    published: 'bg-green-100 text-green-800',
-    archived: 'bg-gray-100 text-gray-800',
-  };
-
-  const schedule = course.schedule || {};
-  const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
-  const dayNames: Record<string, string> = {
-    monday: 'Lunes',
-    tuesday: 'Martes',
-    wednesday: 'Miércoles',
-    thursday: 'Jueves',
-    friday: 'Viernes',
+  const getAvatarColor = () => {
+    return 'bg-violet-200 text-violet-700';
   };
 
   return (
-    <div className="max-w-6xl mx-auto">
-      <Button variant="ghost" className="mb-4" onClick={() => navigate('/')}>
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        {course.name} - {getUserArea?.name || ''}
-      </Button>
+    <div className="max-w-6xl mx-auto px-6 py-8">
+      {/* Header */}
+      <h1 className="large-title-2-bold text-foreground mb-6">Curso {course.name}</h1>
 
       <Tabs defaultValue="about" className="w-full">
-        <TabsList>
-          <TabsTrigger value="about">Sobre el curso</TabsTrigger>
-          <TabsTrigger value="docs">Doc. de coordinación</TabsTrigger>
+        <TabsList className="mb-8">
+          <TabsTrigger value="about">Detalle del curso</TabsTrigger>
+          <TabsTrigger value="classes">Doc. de coordenadas</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="about" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Alumnos</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {students.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No hay alumnos registrados</p>
-                ) : (
-                  <ul className="space-y-2">
-                    {students.map((s) => (
-                      <li key={s.id} className="text-sm">
-                        {s.name}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </CardContent>
-            </Card>
+        <TabsContent value="about" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Alumnos Section */}
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <Users className="w-5 h-5 text-foreground" />
+                <h2 className="headline-1-bold text-foreground">Alumnos</h2>
+                <span className="callout-regular text-muted-foreground">({students.length})</span>
+              </div>
 
-            <div className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Detalles del curso</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <p className="text-sm">
-                    <strong>Nombre:</strong> {course.name}
-                  </p>
-                  <p className="text-sm">
-                    <strong>Área:</strong> {getUserArea?.name || 'N/A'}
-                  </p>
-                  <p className="text-sm">
-                    <strong>Alumnos:</strong> {students.length}
-                  </p>
-                  <p className="text-sm">
-                    <strong>Materias:</strong> {areaSubjects.map((s) => s.name).join(', ')}
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Grilla de horarios</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {Object.keys(schedule).length === 0 ? (
-                    <p className="text-sm text-muted-foreground">No hay horarios definidos</p>
+              <Card className="bg-white/50 backdrop-blur-sm border-slate-200 rounded-3xl p-6">
+                <div className="space-y-2">
+                  {students.length === 0 ? (
+                    <p className="body-2-regular text-muted-foreground">No hay alumnos registrados</p>
                   ) : (
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr className="border-b">
-                            <th className="text-left p-2">Hora</th>
-                            {days.map((d) => (
-                              <th key={d} className="text-left p-2">
-                                {dayNames[d]}
-                              </th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr className="border-b">
-                            <td className="p-2">08:00-09:30</td>
-                            {days.map((d) => (
-                              <td key={d} className="p-2">
-                                {schedule[d]?.[0]?.subject || '-'}
-                              </td>
-                            ))}
-                          </tr>
-                          <tr className="border-b">
-                            <td className="p-2">09:45-11:15</td>
-                            {days.map((d) => (
-                              <td key={d} className="p-2">
-                                {schedule[d]?.[1]?.subject || '-'}
-                              </td>
-                            ))}
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
+                    students.map((student) => (
+                      <div
+                        key={student.id}
+                        className="flex items-center justify-between p-3 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${getAvatarColor()}`}
+                          >
+                            {getInitials(student.name)}
+                          </div>
+                          <div>
+                            <p className="body-2-medium text-foreground">{student.name}</p>
+                            <p className="callout-regular text-muted-foreground">
+                              {student.name.toLowerCase().replace(/\s+/g, '')}@Gmail.Com
+                            </p>
+                          </div>
+                        </div>
+                        <button className="text-muted-foreground hover:text-foreground">
+                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 16 16">
+                            <circle cx="8" cy="3" r="1.5" />
+                            <circle cx="8" cy="8" r="1.5" />
+                            <circle cx="8" cy="13" r="1.5" />
+                          </svg>
+                        </button>
+                      </div>
+                    ))
                   )}
-                </CardContent>
+                </div>
               </Card>
+            </div>
+
+            {/* Sobre el curso Section */}
+            <div className="space-y-6">
+              <div>
+                <div className="flex items-center gap-2 mb-4">
+                  <GraduationCap className="w-5 h-5 text-foreground" />
+                  <h2 className="headline-1-bold text-foreground">Sobre el curso</h2>
+                </div>
+
+                <Card className="bg-white/50 backdrop-blur-sm border-slate-200 rounded-3xl p-6">
+                  <div className="space-y-4">
+                    <div className="pb-4 border-b border-slate-200">
+                      <p className="callout-bold text-foreground mb-1">INSTITUCIÓN</p>
+                      <p className="body-2-regular text-foreground">IFD. N°13</p>
+                    </div>
+
+                    <div className="pb-4 border-b border-slate-200">
+                      <p className="callout-bold text-foreground mb-1">ÁREA</p>
+                      <p className="body-2-regular text-foreground">{getUserArea?.name || 'N/A'}</p>
+                    </div>
+
+                    <div className="pb-4 border-b border-slate-200">
+                      <p className="callout-bold text-foreground mb-1">NIVEL</p>
+                      <p className="body-2-regular text-foreground">Secundaria</p>
+                    </div>
+
+                    <div className="pb-4 border-b border-slate-200">
+                      <p className="callout-bold text-foreground mb-1">TURNO</p>
+                      <p className="body-2-regular text-foreground">Mañana</p>
+                    </div>
+
+                    <div>
+                      <p className="callout-bold text-foreground mb-1">CICLO LECTIVO</p>
+                      <p className="body-2-regular text-foreground">2026</p>
+                    </div>
+                  </div>
+                </Card>
+              </div>
+
+              {/* Grilla de horarios Card */}
+              <div>
+                <Card className="bg-white/50 backdrop-blur-sm border-slate-200 rounded-3xl p-6 cursor-pointer hover:shadow-lg transition-all group">
+                  <div className="flex items-center justify-between">
+                    <h2 className=" text-foreground flex gap-2">
+                      <Calendar className="w-5 h-5 text-foreground" />
+                      Grilla de horarios
+                    </h2>
+                    <ArrowRight className="w-5 h-5 text-foreground group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </Card>
+              </div>
             </div>
           </div>
         </TabsContent>
 
-        <TabsContent value="docs" className="space-y-4">
+        <TabsContent value="classes" className="space-y-6">
           {areaDocs.length > 0 && (
             <>
-              <h3 className="text-lg font-semibold">Documentos existentes</h3>
-              <div className="space-y-3">
-                {areaDocs.map((doc) => (
-                  <Card
-                    key={doc.id}
-                    className="cursor-pointer hover:shadow-md transition-shadow"
-                    onClick={() => navigate(`/doc/${doc.id}`)}
-                  >
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between">
-                        <div className="space-y-1">
-                          <Badge className={statusColors[doc.status] || statusColors.draft}>
-                            {statusLabels[doc.status] || 'Borrador'}
-                          </Badge>
-                          <h4 className="font-semibold">{doc.name}</h4>
-                          <p className="text-sm text-muted-foreground">
-                            {doc.start_date} - {doc.end_date}
-                          </p>
-                        </div>
-                        <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-                          {doc.status !== 'published' && (
-                            <Button size="sm" variant="default" onClick={() => handlePublishDocument(doc.id)}>
-                              Publicar
+              <div>
+                <h3 className="headline-1-bold text-foreground mb-4">Documentos existentes</h3>
+                <div className="space-y-3">
+                  {areaDocs.map((doc) => (
+                    <Card
+                      key={doc.id}
+                      className="bg-white/50 backdrop-blur-sm border-slate-200 rounded-3xl cursor-pointer hover:shadow-lg transition-all"
+                      onClick={() => navigate(`/doc/${doc.id}`)}
+                    >
+                      <CardContent className="p-6">
+                        <div className="flex items-start justify-between">
+                          <div className="space-y-2">
+                            <Badge
+                              className={
+                                doc.status === 'published'
+                                  ? 'bg-green-100 text-green-800 hover:bg-green-100'
+                                  : doc.status === 'archived'
+                                    ? 'bg-gray-100 text-gray-800 hover:bg-gray-100'
+                                    : 'bg-amber-100 text-amber-800 hover:bg-amber-100'
+                              }
+                            >
+                              {doc.status === 'published'
+                                ? 'Publicado'
+                                : doc.status === 'archived'
+                                  ? 'Archivado'
+                                  : 'Borrador'}
+                            </Badge>
+                            <h4 className="headline-1-bold text-foreground">{doc.name}</h4>
+                            <p className="body-2-regular text-muted-foreground">
+                              {doc.start_date} - {doc.end_date}
+                            </p>
+                          </div>
+                          <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                            {doc.status !== 'published' && (
+                              <Button size="sm" variant="default" onClick={() => handlePublishDocument(doc.id)}>
+                                Publicar
+                              </Button>
+                            )}
+                            <Button size="sm" variant="outline" onClick={() => navigate(`/doc/${doc.id}`)}>
+                              Editar
                             </Button>
-                          )}
-                          <Button size="sm" variant="outline" onClick={() => navigate(`/doc/${doc.id}`)}>
-                            Editar
-                          </Button>
-                          <Button size="sm" variant="destructive" onClick={() => handleDeleteDocument(doc.id)}>
-                            Borrar
-                          </Button>
+                            <Button size="sm" variant="destructive" onClick={() => handleDeleteDocument(doc.id)}>
+                              Borrar
+                            </Button>
+                          </div>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
               </div>
-              <hr className="my-6" />
+              <div className="h-px bg-slate-200" />
             </>
           )}
 
-          <h3 className="text-lg font-semibold">Crear nuevo documento</h3>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <Badge>Nuevo</Badge>
-                  <h4 className="font-semibold">Documento de coordinación</h4>
-                  <p className="text-sm text-muted-foreground">
-                    Crear documento para el área {getUserArea?.name || ''}
-                  </p>
+          <div>
+            <h3 className="headline-1-bold text-foreground mb-4">Crear nuevo documento</h3>
+            <Card className="bg-white/50 backdrop-blur-sm border-slate-200 rounded-3xl">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <Badge className="bg-primary/10 text-primary hover:bg-primary/10">Nuevo</Badge>
+                    <h4 className="headline-1-bold text-foreground">Documento de coordinación</h4>
+                    <p className="body-2-regular text-muted-foreground">
+                      Crear documento para el área {getUserArea?.name || ''}
+                    </p>
+                  </div>
+                  <Button onClick={handleStartWizard}>Crear</Button>
                 </div>
-                <Button onClick={handleStartWizard}>Crear</Button>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
     </div>

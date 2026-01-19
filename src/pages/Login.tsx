@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '@/store/useStore';
-import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { AnimatedOrb } from '@/components/ui/AnimatedOrb';
 import { api } from '@/services/api';
 import type { User, Area, CourseSubject } from '@/types';
 
@@ -41,6 +41,13 @@ export function Login() {
     return 'Sin rol asignado';
   };
 
+  const isCoordinator = (userId: number) => {
+    return areas.some((a) => a.coordinator_id === userId);
+  };
+
+  const coordinators = users.filter((user) => isCoordinator(user.id));
+  const teachers = users.filter((user) => !isCoordinator(user.id));
+
   const handleSelectUser = (userId: number) => {
     const user = users.find((u) => u.id === userId);
     if (user) {
@@ -49,32 +56,173 @@ export function Login() {
     }
   };
 
+  const getOrbColor = (index: number) => {
+    const colors = [
+      'from-violet-400 to-purple-600',
+      'from-blue-400 to-cyan-600',
+      'from-emerald-400 to-teal-600',
+      'from-amber-400 to-orange-600',
+      'from-pink-400 to-rose-600',
+      'from-indigo-400 to-blue-600',
+    ];
+    return colors[index % colors.length];
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-6">
-      <div className="w-full max-w-4xl">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-slate-900 mb-2">Bienvenido</h1>
-          <p className="text-slate-600">Selecciona tu usuario para continuar</p>
+    <div className="min-h-screen bg-background relative overflow-hidden flex flex-col items-center justify-center p-6">
+      {/* Background gradients */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-20 left-20 w-96 h-96 bg-gradient-to-br from-primary/10 to-transparent rounded-full blur-3xl animate-pulse" />
+        <div
+          className="absolute bottom-20 right-20 w-80 h-80 bg-gradient-to-br from-accent/10 to-transparent rounded-full blur-3xl animate-pulse"
+          style={{ animationDelay: '1s' }}
+        />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gradient-to-br from-primary/5 to-accent/5 rounded-full blur-3xl" />
+      </div>
+
+      <div className="w-full relative z-10 flex flex-col items-center">
+        {/* Header with orb */}
+        <div className="flex flex-col items-center mb-8">
+          <AnimatedOrb size="md" className="mb-6" />
+          <h1 className="large-title-2-bold text-primary mb-2 text-center">Bienvenido a Alizia</h1>
+          <p className="body-1-regular text-muted-foreground text-center">Selecciona tu perfil para comenzar</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {users.map((user) => (
-            <Card
-              key={user.id}
-              className="cursor-pointer hover:shadow-lg transition-shadow"
-              onClick={() => handleSelectUser(user.id)}
-            >
-              <CardHeader className="text-center">
-                <div className="w-16 h-16 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-2xl font-bold mx-auto mb-4">
-                  {user.name.charAt(0)}
+        <div className="w-full max-w-6xl">
+          {/* Coordinators Section */}
+          {coordinators.length > 0 && (
+            <div className="mb-10">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="flex-1 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                    <svg className="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                      />
+                    </svg>
+                  </div>
+                  <h2 className="headline-1-bold text-primary">Coordinadores</h2>
                 </div>
-                <CardTitle className="text-lg">{user.name}</CardTitle>
-                <CardDescription className="text-sm">{getUserRoleLabel(user.id)}</CardDescription>
-              </CardHeader>
-            </Card>
-          ))}
+                <div className="flex-1 h-px bg-gradient-to-r from-primary/30 via-transparent to-transparent" />
+              </div>
+
+              <div className="flex flex-wrap justify-center gap-6">
+                {coordinators.map((user, index) => (
+                  <div
+                    key={user.id}
+                    className="group cursor-pointer flex flex-col items-center"
+                    onClick={() => handleSelectUser(user.id)}
+                    style={{
+                      animation: 'fadeInUp 0.5s ease-out forwards',
+                      animationDelay: `${index * 0.08}s`,
+                      opacity: 0,
+                    }}
+                  >
+                    <div className="relative flex items-center justify-center">
+                      {/* Subtle glow effect */}
+                      <div
+                        className={`absolute w-32 h-32 bg-gradient-to-br ${getOrbColor(index)} rounded-full blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-300`}
+                      />
+
+                      {/* User orb */}
+                      <div
+                        className={`relative w-24 h-24 rounded-full bg-gradient-to-br ${getOrbColor(index)} flex items-center justify-center shadow-lg group-hover:scale-110 transition-all duration-300 border-2 border-white/20`}
+                      >
+                        <span className="text-4xl font-bold text-white drop-shadow-lg">{user.name.charAt(0)}</span>
+                      </div>
+                    </div>
+
+                    {/* User info */}
+                    <div className="mt-3 text-center w-28">
+                      <p className="body-2-medium mb-0.5 truncate">{user.name}</p>
+                      <p className="callout-regular text-muted-foreground text-xs line-clamp-1">
+                        {getUserRoleLabel(user.id)}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Teachers Section */}
+          {teachers.length > 0 && (
+            <div>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="flex-1 h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center">
+                    <svg className="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                      />
+                    </svg>
+                  </div>
+                  <h2 className="headline-1-bold text-accent">Docentes</h2>
+                </div>
+                <div className="flex-1 h-px bg-gradient-to-r from-accent/30 via-transparent to-transparent" />
+              </div>
+
+              <div className="flex flex-wrap justify-center gap-6">
+                {teachers.map((user, index) => (
+                  <div
+                    key={user.id}
+                    className="group cursor-pointer flex flex-col items-center"
+                    onClick={() => handleSelectUser(user.id)}
+                    style={{
+                      animation: 'fadeInUp 0.5s ease-out forwards',
+                      animationDelay: `${(coordinators.length + index) * 0.08}s`,
+                      opacity: 0,
+                    }}
+                  >
+                    <div className="relative flex items-center justify-center">
+                      {/* Subtle glow effect */}
+                      <div
+                        className={`absolute w-32 h-32 bg-gradient-to-br ${getOrbColor(coordinators.length + index)} rounded-full blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-300`}
+                      />
+
+                      {/* User orb */}
+                      <div
+                        className={`relative w-24 h-24 rounded-full bg-gradient-to-br ${getOrbColor(coordinators.length + index)} flex items-center justify-center shadow-lg group-hover:scale-110 transition-all duration-300 border-2 border-white/20`}
+                      >
+                        <span className="text-4xl font-bold text-white drop-shadow-lg">{user.name.charAt(0)}</span>
+                      </div>
+                    </div>
+
+                    {/* User info */}
+                    <div className="mt-3 text-center w-28">
+                      <p className="body-2-medium mb-0.5 truncate">{user.name}</p>
+                      <p className="callout-regular text-muted-foreground text-xs line-clamp-1">
+                        {getUserRoleLabel(user.id)}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
+
+      <style>{`
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(15px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
     </div>
   );
 }
