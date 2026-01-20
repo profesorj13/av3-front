@@ -1,4 +1,4 @@
-import { Users } from 'lucide-react';
+import { EllipsisVertical, Users } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface Student {
@@ -71,11 +71,7 @@ export function StudentsList({ students, isLoading = false, showActions = true }
                 </div>
                 {showActions && (
                   <button className="text-muted-foreground hover:text-foreground">
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 16 16">
-                      <circle cx="8" cy="3" r="1.5" />
-                      <circle cx="8" cy="8" r="1.5" />
-                      <circle cx="8" cy="13" r="1.5" />
-                    </svg>
+                    <EllipsisVertical />
                   </button>
                 )}
               </div>

@@ -5,6 +5,7 @@ import { AnimatedOrb } from '@/components/ui/AnimatedOrb';
 import { Skeleton } from '@/components/ui/skeleton';
 import { api } from '@/services/api';
 import type { User, Area, CourseSubject } from '@/types';
+import { BookOpenText, Building } from 'lucide-react';
 
 export function Login() {
   const navigate = useNavigate();
@@ -93,7 +94,7 @@ export function Login() {
           <p className="body-1-regular text-muted-foreground text-center">Selecciona tu perfil para comenzar</p>
         </div>
 
-        <div className="w-full max-w-6xl">
+        <div className="w-full max-w-360">
           {/* Coordinators Section */}
           {isLoading ? (
             <div className="mb-10">
@@ -101,14 +102,7 @@ export function Login() {
                 <div className="flex-1 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                    <svg className="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                      />
-                    </svg>
+                    <Building className="w-4 h-4 text-primary" />
                   </div>
                   <h2 className="headline-1-bold text-primary">Coordinadores</h2>
                 </div>
@@ -135,14 +129,7 @@ export function Login() {
                 <div className="flex-1 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                    <svg className="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                      />
-                    </svg>
+                    <Building className="w-4 h-4 text-primary" />
                   </div>
                   <h2 className="headline-1-bold text-primary">Coordinadores</h2>
                 </div>
@@ -195,14 +182,7 @@ export function Login() {
                 <div className="flex-1 h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center">
-                    <svg className="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477 4.5 1.253"
-                      />
-                    </svg>
+                    <BookOpenText className="w-4 h-4 text-accent" />
                   </div>
                   <h2 className="headline-1-bold text-accent">Docentes</h2>
                 </div>
@@ -229,14 +209,7 @@ export function Login() {
                 <div className="flex-1 h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center">
-                    <svg className="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                      />
-                    </svg>
+                    <BookOpenText className="w-4 h-4 text-accent" />
                   </div>
                   <h2 className="headline-1-bold text-accent">Docentes</h2>
                 </div>
