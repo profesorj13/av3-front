@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Users, GraduationCap, Calendar, ArrowRight } from 'lucide-react';
+import { ChevronLeft } from 'lucide-react';
 import { useStore } from '@/store/useStore';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { TabsCustom, TabsCustomContent, TabsCustomList, TabsCustomTrigger } from '@/components/ui/tabs-custom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { StudentsList } from '@/components/ui/StudentsList';
+import { CourseInfo } from '@/components/ui/CourseInfo';
 import { api } from '@/services/api';
 import type { CoordinationDocument } from '@/types';
 
@@ -24,6 +27,7 @@ export function Course() {
 
   const [students, setStudents] = useState<Student[]>([]);
   const [areaDocs, setAreaDocs] = useState<CoordinationDocument[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const course = courses.find((c) => c.id === courseId);
 
@@ -33,6 +37,7 @@ export function Course() {
 
   const loadCourseData = async () => {
     try {
+      setIsLoading(true);
       const [studentsData, allDocs] = await Promise.all([api.courses.getStudents(courseId), api.documents.getAll()]);
 
       setStudents(studentsData as Student[]);
@@ -43,6 +48,8 @@ export function Course() {
       }
     } catch (error) {
       console.error('Error loading course data:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -74,132 +81,70 @@ export function Course() {
     return <div>Curso no encontrado</div>;
   }
 
-  const getInitials = (name: string) => {
-    const parts = name.split(' ');
-    if (parts.length >= 2) {
-      return (parts[0][0] + parts[1][0]).toUpperCase();
-    }
-    return name.substring(0, 2).toUpperCase();
-  };
-
-  const getAvatarColor = () => {
-    return 'bg-violet-200 text-violet-700';
-  };
-
   return (
     <div className="max-w-6xl mx-auto px-6 py-8">
       {/* Header */}
-      <h1 className="large-title-2-bold text-foreground mb-6">Curso {course.name}</h1>
+      <button
+        onClick={() => navigate(-1)}
+        className="flex items-center gap-4 mb-6 cursor-pointer transition-colors hover:text-gray-600"
+      >
+        <ChevronLeft className="text-[#10182B]" />
+        <h1 className="title-2-emphasized text-[#10182B]">Curso {course.name}</h1>
+      </button>
 
-      <Tabs defaultValue="about" className="w-full">
-        <TabsList className="mb-8">
-          <TabsTrigger value="about">Detalle del curso</TabsTrigger>
-          <TabsTrigger value="classes">Doc. de coordenadas</TabsTrigger>
-        </TabsList>
+      <TabsCustom defaultValue="about" className="w-full">
+        <TabsCustomList className="mb-8">
+          <TabsCustomTrigger value="about">Detalle del curso</TabsCustomTrigger>
+          <TabsCustomTrigger value="classes">Doc. de coordenadas</TabsCustomTrigger>
+        </TabsCustomList>
 
-        <TabsContent value="about" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Alumnos Section */}
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <Users className="w-5 h-5 text-foreground" />
-                <h2 className="headline-1-bold text-foreground">Alumnos</h2>
-                <span className="callout-regular text-muted-foreground">({students.length})</span>
-              </div>
+        <TabsCustomContent value="about" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <StudentsList students={students} isLoading={isLoading} showActions={true} />
 
-              <Card className="bg-white/50 backdrop-blur-sm border-slate-200 rounded-3xl p-6">
-                <div className="space-y-2">
-                  {students.length === 0 ? (
-                    <p className="body-2-regular text-muted-foreground">No hay alumnos registrados</p>
-                  ) : (
-                    students.map((student) => (
-                      <div
-                        key={student.id}
-                        className="flex items-center justify-between p-3 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div
-                            className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${getAvatarColor()}`}
-                          >
-                            {getInitials(student.name)}
+            <CourseInfo
+              fields={[
+                { label: 'INSTITUCIÓN', value: 'IFD. N°13' },
+                { label: 'ÁREA', value: getUserArea?.name || 'N/A' },
+                { label: 'NIVEL', value: 'Secundaria' },
+                { label: 'TURNO', value: 'Mañana' },
+                { label: 'CICLO LECTIVO', value: '2026' },
+              ]}
+              showSchedule={true}
+            />
+          </div>
+        </TabsCustomContent>
+
+        <TabsCustomContent value="classes" className="space-y-6">
+          {isLoading ? (
+            // Skeleton loading state for documents
+            <>
+              <div>
+                <h3 className="headline-1-bold text-foreground mb-4">Documentos existentes</h3>
+                <div className="space-y-3">
+                  {Array.from({ length: 3 }).map((_, index) => (
+                    <Card key={index} className="bg-white/50 backdrop-blur-sm border-slate-200 rounded-2xl">
+                      <CardContent className="p-6">
+                        <div className="flex items-start justify-between">
+                          <div className="space-y-2">
+                            <Skeleton className="h-6 w-20 rounded-full" />
+                            <Skeleton className="h-5 w-48" />
+                            <Skeleton className="h-4 w-32" />
                           </div>
-                          <div>
-                            <p className="body-2-medium text-foreground">{student.name}</p>
-                            <p className="callout-regular text-muted-foreground">
-                              {student.name.toLowerCase().replace(/\s+/g, '')}@Gmail.Com
-                            </p>
+                          <div className="flex gap-2">
+                            <Skeleton className="h-8 w-16 rounded" />
+                            <Skeleton className="h-8 w-16 rounded" />
+                            <Skeleton className="h-8 w-16 rounded" />
                           </div>
                         </div>
-                        <button className="text-muted-foreground hover:text-foreground">
-                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 16 16">
-                            <circle cx="8" cy="3" r="1.5" />
-                            <circle cx="8" cy="8" r="1.5" />
-                            <circle cx="8" cy="13" r="1.5" />
-                          </svg>
-                        </button>
-                      </div>
-                    ))
-                  )}
+                      </CardContent>
+                    </Card>
+                  ))}
                 </div>
-              </Card>
-            </div>
-
-            {/* Sobre el curso Section */}
-            <div className="space-y-6">
-              <div>
-                <div className="flex items-center gap-2 mb-4">
-                  <GraduationCap className="w-5 h-5 text-foreground" />
-                  <h2 className="headline-1-bold text-foreground">Sobre el curso</h2>
-                </div>
-
-                <Card className="bg-white/50 backdrop-blur-sm border-slate-200 rounded-3xl p-6">
-                  <div className="space-y-4">
-                    <div className="pb-4 border-b border-slate-200">
-                      <p className="callout-bold text-foreground mb-1">INSTITUCIÓN</p>
-                      <p className="body-2-regular text-foreground">IFD. N°13</p>
-                    </div>
-
-                    <div className="pb-4 border-b border-slate-200">
-                      <p className="callout-bold text-foreground mb-1">ÁREA</p>
-                      <p className="body-2-regular text-foreground">{getUserArea?.name || 'N/A'}</p>
-                    </div>
-
-                    <div className="pb-4 border-b border-slate-200">
-                      <p className="callout-bold text-foreground mb-1">NIVEL</p>
-                      <p className="body-2-regular text-foreground">Secundaria</p>
-                    </div>
-
-                    <div className="pb-4 border-b border-slate-200">
-                      <p className="callout-bold text-foreground mb-1">TURNO</p>
-                      <p className="body-2-regular text-foreground">Mañana</p>
-                    </div>
-
-                    <div>
-                      <p className="callout-bold text-foreground mb-1">CICLO LECTIVO</p>
-                      <p className="body-2-regular text-foreground">2026</p>
-                    </div>
-                  </div>
-                </Card>
               </div>
-
-              {/* Grilla de horarios Card */}
-              <div>
-                <Card className="bg-white/50 backdrop-blur-sm border-slate-200 rounded-3xl p-6 cursor-pointer hover:shadow-lg transition-all group">
-                  <div className="flex items-center justify-between">
-                    <h2 className=" text-foreground flex gap-2">
-                      <Calendar className="w-5 h-5 text-foreground" />
-                      Grilla de horarios
-                    </h2>
-                    <ArrowRight className="w-5 h-5 text-foreground group-hover:translate-x-1 transition-transform" />
-                  </div>
-                </Card>
-              </div>
-            </div>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="classes" className="space-y-6">
-          {areaDocs.length > 0 && (
+              <div className="h-px bg-slate-200" />
+            </>
+          ) : areaDocs.length > 0 ? (
             <>
               <div>
                 <h3 className="headline-1-bold text-foreground mb-4">Documentos existentes</h3>
@@ -207,7 +152,7 @@ export function Course() {
                   {areaDocs.map((doc) => (
                     <Card
                       key={doc.id}
-                      className="bg-white/50 backdrop-blur-sm border-slate-200 rounded-3xl cursor-pointer hover:shadow-lg transition-all"
+                      className="bg-white/50 backdrop-blur-sm border-slate-200 rounded-2xl cursor-pointer hover:shadow-lg transition-all"
                       onClick={() => navigate(`/doc/${doc.id}`)}
                     >
                       <CardContent className="p-6">
@@ -254,6 +199,11 @@ export function Course() {
               </div>
               <div className="h-px bg-slate-200" />
             </>
+          ) : (
+            <div>
+              <h3 className="headline-1-bold text-foreground mb-4">Documentos existentes</h3>
+              <p className="body-2-regular text-muted-foreground">No hay documentos disponibles</p>
+            </div>
           )}
 
           <div>
@@ -273,8 +223,8 @@ export function Course() {
               </CardContent>
             </Card>
           </div>
-        </TabsContent>
-      </Tabs>
+        </TabsCustomContent>
+      </TabsCustom>
     </div>
   );
 }

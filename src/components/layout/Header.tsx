@@ -8,7 +8,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import TabsNavbar from './tabs-navbar';
+import { TabsCustom, TabsCustomList, TabsCustomTrigger } from '@/components/ui/tabs-custom';
 
 export function Header() {
   const navigate = useNavigate();
@@ -31,7 +31,12 @@ export function Header() {
         />
       </div>
       <div className="flex items-center gap-4">
-        <TabsNavbar />
+        <TabsCustom defaultValue="docente" className="max-w-[10.3rem] w-full">
+          <TabsCustomList className="p-1">
+            <TabsCustomTrigger value="docente">Docente</TabsCustomTrigger>
+            <TabsCustomTrigger value="aula">Aula</TabsCustomTrigger>
+          </TabsCustomList>
+        </TabsCustom>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="w-9 h-9 rounded-full bg-[#735fe3] text-primary-foreground flex items-center justify-center shrink-0 hover:bg-primary/90 transition-colors cursor-pointer">
@@ -41,10 +46,13 @@ export function Header() {
           <DropdownMenuContent align="end" className="w-48">
             <div className="px-2 py-1.5">
               <p className="body-2-medium">{currentUser?.name}</p>
-              <p className="callout-regular text-muted-foreground">Usuario actual</p>
+              <p className="callout-regular text-muted-foreground">{currentUser?.email}</p>
             </div>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
+            <DropdownMenuItem
+              onClick={handleLogout}
+              className="cursor-pointer hover:bg-[#735fe3]! hover:text-white! focus:bg-[#735fe3]! focus:text-white!"
+            >
               <LogOut className="mr-2 h-4 w-4" />
               <span>Cerrar sesión</span>
             </DropdownMenuItem>

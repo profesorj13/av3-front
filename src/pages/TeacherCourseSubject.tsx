@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Users, GraduationCap, Calendar, ArrowRight } from 'lucide-react';
 import { useStore } from '@/store/useStore';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { TabsCustom, TabsCustomContent, TabsCustomList, TabsCustomTrigger } from '@/components/ui/tabs-custom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { StudentsList } from '@/components/ui/StudentsList';
+import { CourseInfo } from '@/components/ui/CourseInfo';
 import { api } from '@/services/api';
+import { ChevronLeft } from 'lucide-react';
 
 interface Student {
   id: number;
@@ -30,6 +33,7 @@ export function TeacherCourseSubject() {
   const [students, setStudents] = useState<Student[]>([]);
   const [coordStatus, setCoordStatus] = useState<CoordinationStatus | null>(null);
   const [lessonPlans, setLocalLessonPlans] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const cs = courseSubjects.find((c) => c.id === csId);
   const course = cs ? courses.find((c) => c.id === cs.course_id) : null;
@@ -42,6 +46,7 @@ export function TeacherCourseSubject() {
     if (!cs) return;
 
     try {
+      setIsLoading(true);
       const [studentsData, coordStatusData, lessonPlansData] = await Promise.all([
         api.courses.getStudents(cs.course_id),
         api.courseSubjects.getCoordinationStatus(csId),
@@ -55,6 +60,8 @@ export function TeacherCourseSubject() {
       setLessonPlans(lessonPlansData as any[]);
     } catch (error) {
       console.error('Error loading data:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -68,122 +75,57 @@ export function TeacherCourseSubject() {
     return <div>Curso-materia no encontrado</div>;
   }
 
-  const schedule = course.schedule || {};
-  const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
-  const dayNames: Record<string, string> = {
-    monday: 'Lunes',
-    tuesday: 'Martes',
-    wednesday: 'Miércoles',
-    thursday: 'Jueves',
-    friday: 'Viernes',
-  };
-
   const lessonPlanMap: Record<number, any> = {};
   lessonPlans.forEach((lp) => {
     lessonPlanMap[lp.class_number] = lp;
   });
 
-  const getInitials = (name: string) => {
-    const parts = name.split(' ');
-    if (parts.length >= 2) {
-      return (parts[0][0] + parts[1][0]).toUpperCase();
-    }
-    return name.substring(0, 2).toUpperCase();
-  };
-
   return (
     <div className="max-w-6xl mx-auto px-6 py-8">
-      <h1 className="large-title-2-bold text-foreground mb-6">
-        {cs.course_name} - {cs.subject_name}
-      </h1>
+      <button
+        onClick={() => navigate(-1)}
+        className="flex items-center gap-4 mb-6 cursor-pointer transition-colors hover:text-gray-600"
+      >
+        <ChevronLeft className="text-[#10182B]" />
+        <h1 className="title-2-emphasized text-[#10182B]">
+          {cs.course_name} - {cs.subject_name}
+        </h1>
+      </button>
 
-      <Tabs defaultValue="about" className="w-full">
-        <TabsList className="mb-8">
-          <TabsTrigger value="about">Detalle del curso</TabsTrigger>
-          <TabsTrigger value="classes">Mis clases</TabsTrigger>
-        </TabsList>
+      <TabsCustom defaultValue="about" className="w-full">
+        <TabsCustomList className="mb-8">
+          <TabsCustomTrigger value="about">Detalle del curso</TabsCustomTrigger>
+          <TabsCustomTrigger value="classes">Mis clases</TabsCustomTrigger>
+        </TabsCustomList>
 
-        <TabsContent value="about" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Alumnos Section */}
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <Users className="w-5 h-5 text-foreground" />
-                <h2 className="headline-1-bold text-foreground">Alumnos</h2>
-                <span className="callout-regular text-muted-foreground">({students.length})</span>
-              </div>
+        <TabsCustomContent value="about" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <StudentsList students={students} isLoading={isLoading} showActions={false} />
 
-              <Card className="bg-white/50 backdrop-blur-sm border-slate-200 rounded-3xl p-6">
-                <div className="space-y-2">
-                  {students.length === 0 ? (
-                    <p className="body-2-regular text-muted-foreground">No hay alumnos registrados</p>
-                  ) : (
-                    students.map((student) => (
-                      <div
-                        key={student.id}
-                        className="flex items-center justify-between p-3 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full flex items-center justify-center font-semibold bg-violet-200 text-violet-700">
-                            {getInitials(student.name)}
-                          </div>
-                          <div>
-                            <p className="body-2-medium text-foreground">{student.name}</p>
-                            <p className="callout-regular text-muted-foreground">
-                              {student.name.toLowerCase().replace(/\s+/g, '')}@Gmail.Com
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </Card>
-            </div>
-
-            {/* Sobre el curso Section */}
-            <div className="space-y-6">
-              <div>
-                <div className="flex items-center gap-2 mb-4">
-                  <GraduationCap className="w-5 h-5 text-foreground" />
-                  <h2 className="headline-1-bold text-foreground">Sobre el curso</h2>
-                </div>
-
-                <Card className="bg-white/50 backdrop-blur-sm border-slate-200 rounded-3xl p-6">
-                  <div className="space-y-4">
-                    <div className="pb-4 border-b border-slate-200">
-                      <p className="callout-bold text-foreground mb-1">CURSO</p>
-                      <p className="body-2-regular text-foreground">{cs.course_name}</p>
-                    </div>
-
-                    <div>
-                      <p className="callout-bold text-foreground mb-1">MATERIA</p>
-                      <p className="body-2-regular text-foreground">{cs.subject_name}</p>
-                    </div>
-                  </div>
-                </Card>
-              </div>
-
-              {/* Grilla de horarios Card */}
-              <div>
-                <div className="flex items-center gap-2 mb-4">
-                  <Calendar className="w-5 h-5 text-foreground" />
-                  <h2 className="headline-1-bold text-foreground">Grilla de horarios</h2>
-                </div>
-
-                <Card className="bg-white/50 backdrop-blur-sm border-slate-200 rounded-3xl p-6 cursor-pointer hover:shadow-lg transition-all group">
-                  <div className="flex items-center justify-between">
-                    <span className="body-2-medium text-foreground">Ver horarios del curso</span>
-                    <ArrowRight className="w-5 h-5 text-foreground group-hover:translate-x-1 transition-transform" />
-                  </div>
-                </Card>
-              </div>
-            </div>
+            <CourseInfo
+              fields={[
+                { label: 'CURSO', value: cs.course_name },
+                { label: 'MATERIA', value: cs.subject_name },
+              ]}
+              showSchedule={true}
+            />
           </div>
-        </TabsContent>
+        </TabsCustomContent>
 
-        <TabsContent value="classes" className="space-y-6">
-          {!coordStatus?.has_published_document ? (
+        <TabsCustomContent value="classes" className="space-y-6">
+          {isLoading ? (
+            // Skeleton loading state for classes
+            <Card className="bg-white/50 backdrop-blur-sm border-slate-200 rounded-3xl">
+              <CardContent className="py-12 text-center">
+                <div className="space-y-4">
+                  <Skeleton className="h-12 w-12 mx-auto rounded-lg" />
+                  <Skeleton className="h-6 w-48 mx-auto" />
+                  <Skeleton className="h-4 w-64 mx-auto" />
+                  <Skeleton className="h-4 w-56 mx-auto" />
+                </div>
+              </CardContent>
+            </Card>
+          ) : !coordStatus?.has_published_document ? (
             <Card className="bg-white/50 backdrop-blur-sm border-slate-200 rounded-3xl">
               <CardContent className="py-12 text-center">
                 <div className="text-6xl mb-4">📋</div>
@@ -271,8 +213,8 @@ export function TeacherCourseSubject() {
               </div>
             </>
           )}
-        </TabsContent>
-      </Tabs>
+        </TabsCustomContent>
+      </TabsCustom>
     </div>
   );
 }

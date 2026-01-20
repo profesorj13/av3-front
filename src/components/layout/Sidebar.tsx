@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Home, Calendar, Folder, Settings } from 'lucide-react';
+import { House, Calendar, Folder, Layers2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface SidebarProps {
@@ -13,33 +13,33 @@ export function Sidebar({ className }: SidebarProps) {
         <li>
           <Link
             to="/"
-            className="flex items-center justify-center w-10 h-10 rounded-lg text-black hover:text-[#324155] transition-colors"
+            className="flex items-center justify-center w-10 h-10 rounded-lg text-[#000000b3] hover:text-[#324155] transition-colors"
           >
-            <Home size={20} />
+            <House />
           </Link>
         </li>
         <li>
           <Link
             to="/"
-            className="flex items-center justify-center w-10 h-10 rounded-lg text-black hover:text-[#324155] transition-colors"
+            className="flex items-center justify-center w-10 h-10 rounded-lg text-[#000000b3] hover:text-[#324155] transition-colors"
           >
-            <Calendar size={20} />
+            <Calendar />
           </Link>
         </li>
         <li>
           <Link
             to="/"
-            className="flex items-center justify-center w-10 h-10 rounded-lg text-black hover:text-[#324155] transition-colors"
+            className="flex items-center justify-center w-10 h-10 rounded-lg text-[#000000b3] hover:text-[#324155] transition-colors"
           >
-            <Folder size={20} />
+            <Folder />
           </Link>
         </li>
         <li>
           <Link
             to="/"
-            className="flex items-center justify-center w-10 h-10 rounded-lg text-black hover:text-[#324155] transition-colors"
+            className="flex items-center justify-center w-10 h-10 rounded-lg text-[#000000b3] hover:text-[#324155] transition-colors"
           >
-            <Settings size={20} />
+            <Layers2 />
           </Link>
         </li>
       </ul>

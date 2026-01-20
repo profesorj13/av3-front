@@ -1,13 +1,15 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '@/store/useStore';
 import { AnimatedOrb } from '@/components/ui/AnimatedOrb';
+import { Skeleton } from '@/components/ui/skeleton';
 import { api } from '@/services/api';
 import type { User, Area, CourseSubject } from '@/types';
 
 export function Login() {
   const navigate = useNavigate();
   const { users, areas, courseSubjects, setUsers, setAreas, setCourseSubjects, setCurrentUser } = useStore();
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     loadData();
@@ -15,6 +17,7 @@ export function Login() {
 
   const loadData = async () => {
     try {
+      setIsLoading(true);
       const [usersData, areasData, courseSubjectsData] = await Promise.all([
         api.users.getAll(),
         api.areas.getAll(),
@@ -25,6 +28,8 @@ export function Login() {
       setCourseSubjects(courseSubjectsData as CourseSubject[]);
     } catch (error) {
       console.error('Error loading data:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -90,7 +95,41 @@ export function Login() {
 
         <div className="w-full max-w-6xl">
           {/* Coordinators Section */}
-          {coordinators.length > 0 && (
+          {isLoading ? (
+            <div className="mb-10">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="flex-1 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                    <svg className="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                      />
+                    </svg>
+                  </div>
+                  <h2 className="headline-1-bold text-primary">Coordinadores</h2>
+                </div>
+                <div className="flex-1 h-px bg-gradient-to-r from-primary/30 via-transparent to-transparent" />
+              </div>
+
+              <div className="flex flex-wrap justify-center gap-6">
+                {Array.from({ length: 3 }).map((_, index) => (
+                  <div key={index} className="flex flex-col items-center">
+                    <div className="relative flex items-center justify-center mb-3">
+                      <Skeleton className="w-24 h-24 rounded-full" />
+                    </div>
+                    <div className="text-center w-28 space-y-2">
+                      <Skeleton className="h-4 w-20 mx-auto" />
+                      <Skeleton className="h-3 w-24 mx-auto" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : coordinators.length > 0 ? (
             <div className="mb-10">
               <div className="flex items-center gap-3 mb-6">
                 <div className="flex-1 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
@@ -147,10 +186,44 @@ export function Login() {
                 ))}
               </div>
             </div>
-          )}
+          ) : null}
 
           {/* Teachers Section */}
-          {teachers.length > 0 && (
+          {isLoading ? (
+            <div>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="flex-1 h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center">
+                    <svg className="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477 4.5 1.253"
+                      />
+                    </svg>
+                  </div>
+                  <h2 className="headline-1-bold text-accent">Docentes</h2>
+                </div>
+                <div className="flex-1 h-px bg-gradient-to-r from-accent/30 via-transparent to-transparent" />
+              </div>
+
+              <div className="flex flex-wrap justify-center gap-6">
+                {Array.from({ length: 4 }).map((_, index) => (
+                  <div key={index} className="flex flex-col items-center">
+                    <div className="relative flex items-center justify-center mb-3">
+                      <Skeleton className="w-24 h-24 rounded-full" />
+                    </div>
+                    <div className="text-center w-28 space-y-2">
+                      <Skeleton className="h-4 w-20 mx-auto" />
+                      <Skeleton className="h-3 w-24 mx-auto" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : teachers.length > 0 ? (
             <div>
               <div className="flex items-center gap-3 mb-6">
                 <div className="flex-1 h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
@@ -207,7 +280,7 @@ export function Login() {
                 ))}
               </div>
             </div>
-          )}
+          ) : null}
         </div>
       </div>
 
