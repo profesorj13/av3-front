@@ -22,6 +22,9 @@ interface DocumentSectionsListProps {
   isLoading?: boolean;
   onCreateDocument: (topicId: number) => void;
   onEditDocument?: (documentId: number) => void;
+  createButtonText?: string;
+  editButtonText?: string;
+  renderBadge?: (topic: DocumentTopic) => React.ReactNode;
 }
 
 const getStatusLabel = (status: DocumentTopic['status']) => {
@@ -56,6 +59,9 @@ export function DocumentSectionsList({
   isLoading = false,
   onCreateDocument,
   onEditDocument,
+  createButtonText = 'Crear documento',
+  editButtonText = 'Ver documento',
+  renderBadge,
 }: DocumentSectionsListProps) {
   if (isLoading) {
     return (
@@ -108,7 +114,11 @@ export function DocumentSectionsList({
                   <div className="p-4">
                     <div className="flex items-center justify-between">
                       <div className="space-y-2">
-                        <Badge className={getStatusStyles(topic.status)}>{getStatusLabel(topic.status)}</Badge>
+                        {renderBadge ? (
+                          renderBadge(topic)
+                        ) : (
+                          <Badge className={getStatusStyles(topic.status)}>{getStatusLabel(topic.status)}</Badge>
+                        )}
                         <h4 className="headline-1-bold text-[#10182B]">{topic.name}</h4>
                         <p className="body-2-regular text-secondary-foreground">{topic.categoriesCount} Categorías</p>
                       </div>
@@ -120,7 +130,7 @@ export function DocumentSectionsList({
                         }
                         className="flex items-center gap-2 text-primary  font-medium transition-colors cursor-pointer"
                       >
-                        <span>{topic.documentId ? 'Ver documento' : 'Crear documento'}</span>
+                        <span>{topic.documentId ? editButtonText : createButtonText}</span>
                         <ChevronRight className="w-5 h-5" />
                       </button>
                     </div>

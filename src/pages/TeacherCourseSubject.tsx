@@ -4,12 +4,12 @@ import { useStore } from '@/store/useStore';
 import { TabsCustom, TabsCustomContent, TabsCustomList, TabsCustomTrigger } from '@/components/ui/tabs-custom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { StudentsList } from '@/components/ui/StudentsList';
 import { CourseInfo } from '@/components/ui/CourseInfo';
+import { DocumentSectionsList, type DocumentSection, type DocumentTopic } from '@/components/ui/DocumentSectionsList';
 import { api } from '@/services/api';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, File } from 'lucide-react';
 
 interface Student {
   id: number;
@@ -28,11 +28,13 @@ export function TeacherCourseSubject() {
   const navigate = useNavigate();
   const csId = parseInt(id || '0');
 
-  const { courses, courseSubjects, categories, setCoordinationStatus, setLessonPlans } = useStore();
+  const { courses, courseSubjects, setCoordinationStatus, setLessonPlans } = useStore();
+  const getUserArea = useStore((state) => state.getUserArea());
 
   const [students, setStudents] = useState<Student[]>([]);
   const [coordStatus, setCoordStatus] = useState<CoordinationStatus | null>(null);
   const [lessonPlans, setLocalLessonPlans] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState('about');
   const [isLoading, setIsLoading] = useState(true);
 
   const cs = courseSubjects.find((c) => c.id === csId);
@@ -65,10 +67,71 @@ export function TeacherCourseSubject() {
     }
   };
 
-  const handleStartPlanWizard = (classNumber: number, title: string, categoryIds: number[], objective: string) => {
-    navigate(`/teacher/planificar/${csId}/${classNumber}`, {
-      state: { title, categoryIds, objective },
+  const handleViewCoordinationDocument = () => {
+    // Navigate to coordination document or open modal
+    // This should be implemented based on how the coordination document is accessed
+    if (coordStatus?.document_name) {
+      // For now, let's assume we navigate to a document view
+      // This could be adjusted based on actual requirements
+      console.log('View coordination document:', coordStatus.document_name);
+    }
+  };
+
+  const handleStartPlanWizard = (topicId: number) => {
+    navigate(`/teacher/planificar/${csId}/${topicId}`);
+  };
+
+  const handleEditDocument = (documentId: number) => {
+    navigate(`/teacher/plan/${documentId}`);
+  };
+
+  // Transform class plan data to DocumentSections format
+  const transformToDocumentSections = (): DocumentSection[] => {
+    if (!coordStatus?.class_plan || coordStatus.class_plan.length === 0) {
+      return [];
+    }
+
+    // Group classes by cuatrimestre (assuming we have this info or can derive it)
+    const classesByCuatrimestre: Record<string, any[]> = {};
+
+    coordStatus.class_plan!.forEach((c: any) => {
+      // For now, let's assume first half of classes are "Primer cuatrimestre" and second half are "Segundo cuatrimestre"
+      // This logic should be adjusted based on actual data structure
+      const cuatrimestre =
+        c.class_number <= Math.ceil(coordStatus.class_plan!.length / 2)
+          ? 'Primer cuatrimestre'
+          : 'Segundo cuatrimestre';
+
+      if (!classesByCuatrimestre[cuatrimestre]) {
+        classesByCuatrimestre[cuatrimestre] = [];
+      }
+      classesByCuatrimestre[cuatrimestre].push(c);
     });
+
+    return Object.entries(classesByCuatrimestre).map(([name, classes], index) => ({
+      id: index + 1,
+      name,
+      topics: classes.map((c: any): DocumentTopic & { classType?: string } => {
+        const existingPlan = lessonPlanMap[c.class_number];
+        return {
+          id: c.class_number,
+          name: c.title || `Clase ${c.class_number}`,
+          status: existingPlan ? (existingPlan.status === 'planned' ? 'completed' : 'in_progress') : 'pending',
+          categoriesCount: c.category_ids?.length || 0,
+          documentId: existingPlan?.id,
+          classType: c.class_type || 'Individual', // Add class type info
+        };
+      }),
+    }));
+  };
+
+  // Custom badge renderer for teacher view
+  const renderTeacherBadge = (topic: DocumentTopic & { classType?: string }) => {
+    return (
+      <span className="text-xs font-semibold text-foreground">
+        Clase {topic.id} • {topic.classType || 'Individual'}
+      </span>
+    );
   };
 
   if (!cs || !course) {
@@ -82,17 +145,30 @@ export function TeacherCourseSubject() {
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-8">
-      <button
-        onClick={() => navigate('/')}
-        className="flex items-center gap-4 mb-6 cursor-pointer transition-colors hover:text-gray-600"
-      >
-        <ChevronLeft className="text-[#10182B]" />
-        <h1 className="title-2-emphasized text-[#10182B]">
-          {cs.course_name} - {cs.subject_name}
-        </h1>
-      </button>
+      <div className="flex items-center justify-between mb-6">
+        <button
+          onClick={() => navigate('/')}
+          className="flex items-center gap-4 cursor-pointer transition-colors hover:text-gray-600"
+        >
+          <ChevronLeft className="text-[#10182B]" />
+          <h1 className="title-2-emphasized text-[#10182B]">
+            {cs.course_name} - {cs.subject_name}
+          </h1>
+        </button>
 
-      <TabsCustom defaultValue="about" className="w-full">
+        {coordStatus?.has_published_document && activeTab === 'classes' && (
+          <Button
+            variant="outline"
+            onClick={handleViewCoordinationDocument}
+            className="flex items-center gap-2 text-primary bg-muted border-none cursor-pointer rounded-xl hover:bg-muted hover:text-primary"
+          >
+            <File className="w-4 h-4 text-primary" />
+            Documento de coordenadas
+          </Button>
+        )}
+      </div>
+
+      <TabsCustom value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsCustomList className="mb-8">
           <TabsCustomTrigger value="about">Detalle del curso</TabsCustomTrigger>
           <TabsCustomTrigger value="classes">Mis clases</TabsCustomTrigger>
@@ -104,8 +180,11 @@ export function TeacherCourseSubject() {
 
             <CourseInfo
               fields={[
-                { label: 'CURSO', value: cs.course_name },
-                { label: 'MATERIA', value: cs.subject_name },
+                { label: 'INSTITUCIÓN', value: 'IFD. N°13' },
+                { label: 'ÁREA', value: getUserArea?.name || 'N/A' },
+                { label: 'NIVEL', value: 'Secundaria' },
+                { label: 'TURNO', value: 'Mañana' },
+                { label: 'CICLO LECTIVO', value: '2026' },
               ]}
               showSchedule={true}
             />
@@ -137,81 +216,15 @@ export function TeacherCourseSubject() {
               </CardContent>
             </Card>
           ) : (
-            <>
-              <div>
-                <h3 className="headline-1-bold text-foreground mb-2">Plan de clases</h3>
-                <p className="body-2-regular text-muted-foreground">
-                  Documento: {coordStatus.document_name} | Coordinador: {coordStatus.coordinator_name || 'N/A'}
-                </p>
-              </div>
-
-              <div className="space-y-3">
-                {(coordStatus.class_plan || []).length === 0 ? (
-                  <p className="body-1-regular text-muted-foreground">
-                    No hay clases definidas en el documento de coordinación
-                  </p>
-                ) : (
-                  (coordStatus.class_plan || []).map((c: any) => {
-                    const existingPlan = lessonPlanMap[c.class_number];
-                    const statusClass = existingPlan
-                      ? existingPlan.status === 'planned'
-                        ? 'bg-green-100 text-green-800 hover:bg-green-100'
-                        : 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100'
-                      : 'bg-gray-100 text-gray-800 hover:bg-gray-100';
-                    const statusLabel = existingPlan
-                      ? existingPlan.status === 'planned'
-                        ? 'Planificada'
-                        : 'En progreso'
-                      : 'Sin planificar';
-
-                    const categoryNames = (c.category_ids || []).map((catId: number) => {
-                      const cat = categories.find((cat) => cat.id === catId);
-                      return cat ? cat.name : `Cat ${catId}`;
-                    });
-
-                    return (
-                      <Card key={c.class_number} className="bg-white/50 backdrop-blur-sm border-slate-200 rounded-3xl">
-                        <CardContent className="p-6">
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-3">
-                                <Badge variant="outline" className="rounded-xl">
-                                  Clase {c.class_number}
-                                </Badge>
-                                <Badge className={statusClass}>{statusLabel}</Badge>
-                              </div>
-                              <h4 className="headline-1-bold text-foreground mb-3">{c.title || 'Sin título'}</h4>
-                              <div className="flex flex-wrap gap-2">
-                                {categoryNames.map((name: string, idx: number) => (
-                                  <Badge key={idx} variant="secondary" className="rounded-xl">
-                                    {name}
-                                  </Badge>
-                                ))}
-                              </div>
-                            </div>
-                            <Button
-                              variant={existingPlan ? 'outline' : 'default'}
-                              onClick={() =>
-                                existingPlan
-                                  ? navigate(`/teacher/plan/${existingPlan.id}`)
-                                  : handleStartPlanWizard(
-                                      c.class_number,
-                                      c.title || '',
-                                      c.category_ids || [],
-                                      c.objective || '',
-                                    )
-                              }
-                            >
-                              {existingPlan ? 'Revisar' : 'Planificar'}
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })
-                )}
-              </div>
-            </>
+            <DocumentSectionsList
+              sections={transformToDocumentSections()}
+              isLoading={isLoading}
+              onCreateDocument={handleStartPlanWizard}
+              onEditDocument={handleEditDocument}
+              createButtonText="Planificar clase"
+              editButtonText="Revisar plan"
+              renderBadge={renderTeacherBadge}
+            />
           )}
         </TabsCustomContent>
       </TabsCustom>
