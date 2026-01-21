@@ -130,7 +130,13 @@ export function DocumentSectionsList({
                         }
                         className="flex items-center gap-2 text-primary  font-medium transition-colors cursor-pointer"
                       >
-                        <span>{topic.documentId ? editButtonText : createButtonText}</span>
+                        <span>
+                          {topic.status === 'in_progress'
+                            ? 'Editar documento'
+                            : topic.documentId
+                              ? editButtonText
+                              : createButtonText}
+                        </span>
                         <ChevronRight className="w-5 h-5" />
                       </button>
                     </div>

@@ -1,8 +1,9 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Share2, X, Send, Calendar, Loader2, Share } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Share2, X, Calendar, Loader2, Share } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { Button } from '@/components/ui/button';
+import { ChatBot } from '@/components/ui/ChatBot';
 import { api } from '@/services/api';
 import type { CoordinationDocument, ChatMessage } from '@/types';
 
@@ -21,8 +22,7 @@ export function Document() {
     setIsGenerating,
   } = useStore();
 
-  const [chatInput, setChatInput] = useState('');
-  const chatEndRef = useRef<HTMLDivElement>(null);
+  const [isChatGenerating, setIsChatGenerating] = useState(false);
 
   useEffect(() => {
     loadDocument();
@@ -36,11 +36,7 @@ export function Document() {
     if (currentDocument && !hasContent && !isGenerating) {
       handleGenerateContent();
     }
-  }, [currentDocument]);
-
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [chatHistory]);
+  }, [currentDocument?.id]); // Only trigger on document load, not on every update
 
   const loadDocument = async () => {
     try {
@@ -51,43 +47,41 @@ export function Document() {
     }
   };
 
-  const handleSendMessage = async () => {
-    if (!chatInput.trim() || !currentDocument) return;
-
+  const handleChatMessage = async (message: string) => {
     const userMessage: ChatMessage = {
       role: 'user',
-      content: chatInput,
+      content: message.trim(),
     };
 
     addChatMessage(userMessage);
-    setChatInput('');
-    setIsGenerating(true);
+    setIsChatGenerating(true);
 
     try {
-      const response = await api.chat.sendMessage(`/coordination-documents/${docId}/chat`, {
-        message: chatInput,
-        history: chatHistory,
+      // Send full history to backend (exactly like original frontend)
+      const chatResult = await api.chat.sendMessage(`/coordination-documents/${docId}/chat`, {
+        history: chatHistory.concat(userMessage), // Send complete history
       });
 
       const assistantMessage: ChatMessage = {
         role: 'assistant',
-        content: (response as any).response || 'Sin respuesta',
+        content: (chatResult as any).response,
       };
 
       addChatMessage(assistantMessage);
 
-      if ((response as any).updated_document) {
-        setCurrentDocument((response as any).updated_document);
+      // Update document with any changes (exactly like original frontend)
+      if ((chatResult as any).document) {
+        setCurrentDocument({ ...currentDocument, ...(chatResult as any).document });
       }
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error('Error sending chat message:', error);
       const errorMessage: ChatMessage = {
         role: 'assistant',
-        content: 'Error al procesar el mensaje',
+        content: 'Lo siento, hubo un error. Intenta de nuevo.',
       };
       addChatMessage(errorMessage);
     } finally {
-      setIsGenerating(false);
+      setIsChatGenerating(false);
     }
   };
 
@@ -112,15 +106,18 @@ export function Document() {
   const handleSaveClassTitle = async (subjectId: number, classNumber: number, newTitle: string) => {
     if (!currentDocument) return;
 
-    const subjectsData = { ...(currentDocument as any).subjects_data };
+    const subjectsData = JSON.parse(JSON.stringify((currentDocument as any).subjects_data));
     if (subjectsData[subjectId] && subjectsData[subjectId].class_plan) {
       const classItem = subjectsData[subjectId].class_plan.find((c: any) => c.class_number === classNumber);
       if (classItem && classItem.title !== newTitle) {
         classItem.title = newTitle;
         try {
           await api.documents.update(docId, { subjects_data: subjectsData });
-          const updatedDoc = await api.documents.getById(docId);
-          setCurrentDocument(updatedDoc as CoordinationDocument);
+          // Update local state directly (like original frontend)
+          setCurrentDocument({
+            ...currentDocument,
+            subjects_data: subjectsData,
+          } as any);
         } catch (error) {
           console.error('Error saving class title:', error);
         }
@@ -186,8 +183,13 @@ export function Document() {
         <h1 className="title-2-bold text-[#10182B]">Documento de coordenadas</h1>
         <div className="flex items-center gap-3">
           <Button
-            onClick={handlePublishDocument}
-            className="flex items-center gap-2 text-primary bg-muted border-none cursor-pointer rounded-xl hover:bg-muted hover:text-primary"
+            onClick={currentDocument.status !== 'published' ? handlePublishDocument : undefined}
+            disabled={currentDocument.status === 'published'}
+            className={`flex items-center gap-2 text-primary bg-muted border-none rounded-xl ${
+              currentDocument.status === 'published'
+                ? 'cursor-not-allowed opacity-50'
+                : 'cursor-pointer hover:bg-muted hover:text-primary'
+            }`}
           >
             <Share className="w-4 h-4 text-primary" />
             {currentDocument.status === 'published' ? 'Publicado' : 'Compartir'}
@@ -200,59 +202,17 @@ export function Document() {
 
       <div className="flex-1 flex overflow-hidden p-6 gap-6">
         {/* Left Sidebar - Chat */}
-        <div className="w-80 flex flex-col activity-card-bg rounded-2xl overflow-hidden">
-          <div className="p-4 border-b border-muted flex items-center justify-between">
-            <h3 className="headline-1-bold text-[#10182B]">Chat Alizia</h3>
-          </div>
-
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {chatHistory.length === 0 ? (
-              <div className="activity-card-bg rounded-2xl p-4">
-                <h4 className="body-1-medium text-[#10182B] mb-2">Documento creado</h4>
-                <p className="body-2-regular text-[#47566C]">
-                  Si necesitás realizar algún cambio, podés escribirme y te ayudaremos.
-                </p>
-              </div>
-            ) : (
-              chatHistory.map((msg, idx) => (
-                <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div
-                    className={`max-w-[85%] rounded-2xl p-3 ${
-                      msg.role === 'user' ? 'bg-[#735FE3] text-white' : 'activity-card-bg text-[#10182B]'
-                    }`}
-                  >
-                    <p className="body-2-regular">{msg.content}</p>
-                  </div>
-                </div>
-              ))
-            )}
-            <div ref={chatEndRef} />
-          </div>
-
-          <div className="h-px bg-gray-200/50" />
-          <div className="p-4">
-            <div className="relative">
-              <input
-                type="text"
-                value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                placeholder="Escribí tu mensaje para Alizia..."
-                disabled={isGenerating}
-                className="w-full h-12 rounded-xl border-0 fill-primary px-4 pr-12 text-sm text-[#2C2C2C] placeholder:text-[#2C2C2C]/60 focus:outline-none focus:ring-2 focus:ring-primary/20"
-              />
-              <button
-                onClick={handleSendMessage}
-                disabled={isGenerating || !chatInput.trim()}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-[#735FE3] rounded-lg hover:bg-[#735FE3]/90 disabled:opacity-50 cursor-pointer"
-              >
-                <Send className="w-4 h-4 text-white" />
-              </button>
-            </div>
-            <p className="text-xs text-[#47566C]/60 mt-2 text-center">
-              Alizia puede equivocarse. Siempre verificá la información importante antes de tomar decisiones.
-            </p>
-          </div>
+        <div className="w-80 flex flex-col">
+          <ChatBot
+            messages={chatHistory}
+            onSendMessage={handleChatMessage}
+            isGenerating={isGenerating || isChatGenerating}
+            placeholder="Escribí tu mensaje para Alizia..."
+            welcomeMessage={{
+              title: 'Documento creado',
+              content: 'Si necesitás realizar algún cambio, podés escribirme y te ayudaremos.',
+            }}
+          />
         </div>
 
         {/* Center - AI Generated Content */}
@@ -424,7 +384,23 @@ export function Document() {
                       >
                         <input
                           type="text"
-                          defaultValue={c.title}
+                          value={c.title || ''}
+                          onChange={(e) => {
+                            // Update local state immediately for better UX
+                            const subjectsData = JSON.parse(JSON.stringify((currentDocument as any).subjects_data));
+                            if (subjectsData[c.subject_id] && subjectsData[c.subject_id].class_plan) {
+                              const classItem = subjectsData[c.subject_id].class_plan.find(
+                                (item: any) => item.class_number === c.class_number,
+                              );
+                              if (classItem) {
+                                classItem.title = e.target.value;
+                                setCurrentDocument({
+                                  ...currentDocument,
+                                  subjects_data: subjectsData,
+                                } as any);
+                              }
+                            }
+                          }}
                           onBlur={(e) => {
                             handleSaveClassTitle(c.subject_id, c.class_number, e.target.value);
                           }}
