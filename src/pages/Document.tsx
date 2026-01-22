@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, X, Calendar, Loader2, Share } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,9 @@ import type { CoordinationDocument, ChatMessage } from '@/types';
 export function Document() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const docId = parseInt(id || '0');
+  const isReadOnly = searchParams.get('readonly') === 'true';
 
   const {
     currentDocument,
@@ -163,7 +165,6 @@ export function Document() {
       }
 
       await api.documents.update(docId, updateData);
-
       // Update local state
       setCurrentDocument({
         ...currentDocument,
@@ -178,7 +179,8 @@ export function Document() {
       });
     } catch (error) {
       console.error('Error saving content:', error);
-      alert('Error al guardar el contenido');
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      alert(`Error al guardar el contenido: ${errorMessage}`);
     }
   };
 
@@ -241,20 +243,22 @@ export function Document() {
 
       <div className="flex-1 flex overflow-hidden p-6 gap-6">
         {/* Left Sidebar - Chat */}
-        <div className={`${isChatCollapsed ? 'w-12' : 'w-80'} flex flex-col transition-all duration-300 ease-in-out`}>
-          <ChatBot
-            messages={chatHistory}
-            onSendMessage={handleChatMessage}
-            isGenerating={isGenerating || isChatGenerating}
-            placeholder="Escribí tu mensaje para Alizia..."
-            welcomeMessage={{
-              title: 'Documento creado',
-              content: 'Si necesitás realizar algún cambio, podés escribirme y lo ajustamos.',
-            }}
-            isCollapsed={isChatCollapsed}
-            onToggleCollapse={() => setIsChatCollapsed(!isChatCollapsed)}
-          />
-        </div>
+        {!isReadOnly && (
+          <div className={`${isChatCollapsed ? 'w-12' : 'w-80'} flex flex-col transition-all duration-300 ease-in-out`}>
+            <ChatBot
+              messages={chatHistory}
+              onSendMessage={handleChatMessage}
+              isGenerating={isGenerating || isChatGenerating}
+              placeholder="Escribí tu mensaje para Alizia..."
+              welcomeMessage={{
+                title: 'Documento creado',
+                content: 'Si necesitás realizar algún cambio, podés escribirme y lo ajustamos.',
+              }}
+              isCollapsed={isChatCollapsed}
+              onToggleCollapse={() => setIsChatCollapsed(!isChatCollapsed)}
+            />
+          </div>
+        )}
 
         {/* Center - AI Generated Content */}
         <div className="flex-1 flex flex-col activity-card-bg rounded-2xl overflow-hidden">
@@ -292,18 +296,20 @@ export function Document() {
               ) : (
                 <div className="flex items-center gap-2">
                   <h2
-                    className="headline-1-bold text-[#10182B] cursor-pointer hover:bg-gray-50 px-2 py-1 rounded transition-colors"
-                    onClick={() => handleContentEdit('title', currentDocument.name)}
-                    title="Clic para editar"
+                    className={`headline-1-bold text-[#10182B] ${!isReadOnly ? 'cursor-pointer hover:bg-gray-50 px-2 py-1 rounded transition-colors' : ''}`}
+                    onClick={!isReadOnly ? () => handleContentEdit('title', currentDocument.name) : undefined}
+                    title={!isReadOnly ? 'Clic para editar' : ''}
                   >
                     {currentDocument.name}
                   </h2>
-                  <button
-                    onClick={() => handleContentEdit('title', currentDocument.name)}
-                    className="text-xs text-blue-600 hover:text-blue-800 cursor-pointer"
-                  >
-                    Editar
-                  </button>
+                  {!isReadOnly && (
+                    <button
+                      onClick={() => handleContentEdit('title', currentDocument.name)}
+                      className="text-xs text-blue-600 hover:text-blue-800 cursor-pointer"
+                    >
+                      Editar
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -333,7 +339,7 @@ export function Document() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="headline-1-bold text-[#10182B]">Estrategia metodológica</h3>
-                  {hasContent && !isGenerating && (
+                  {hasContent && !isGenerating && !isReadOnly && (
                     <button
                       onClick={() => handleContentEdit('strategy', (currentDocument as any).methodological_strategies)}
                       className="text-xs text-blue-600 hover:text-blue-800 cursor-pointer"
@@ -349,7 +355,7 @@ export function Document() {
                   </div>
                 ) : (
                   <div>
-                    {editingContent.strategy !== undefined ? (
+                    {editingContent.strategy !== undefined && !isReadOnly ? (
                       <div className="space-y-2">
                         <textarea
                           value={editingContent.strategy}
@@ -381,11 +387,13 @@ export function Document() {
                       </div>
                     ) : (
                       <div
-                        className="body-2-regular text-secondary-foreground whitespace-pre-wrap cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors"
-                        onClick={() =>
-                          handleContentEdit('strategy', (currentDocument as any).methodological_strategies)
+                        className={`body-2-regular text-secondary-foreground whitespace-pre-wrap ${!isReadOnly ? 'cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors' : 'p-2'}`}
+                        onClick={
+                          !isReadOnly
+                            ? () => handleContentEdit('strategy', (currentDocument as any).methodological_strategies)
+                            : undefined
                         }
-                        title="Clic para editar"
+                        title={!isReadOnly ? 'Clic para editar' : ''}
                       >
                         {hasContent ? (
                           (currentDocument as any).methodological_strategies
@@ -524,8 +532,7 @@ export function Document() {
                           key={`${c.class_number}-${c.subject_id}-${idx}`}
                           className="fill-primary rounded-xl p-3 space-y-2"
                         >
-                          <input
-                            type="text"
+                          <textarea
                             value={c.title || ''}
                             onChange={(e) => {
                               // Update local state immediately for better UX
@@ -546,9 +553,18 @@ export function Document() {
                             onBlur={(e) => {
                               handleSaveClassTitle(c.subject_id, c.class_number, e.target.value);
                             }}
-                            className="w-full body-2-medium text-[#10182B] text-sm bg-transparent border-0 focus:outline-none"
+                            className="w-full body-2-medium text-[#10182B] text-sm bg-transparent border-0 focus:outline-none resize-none overflow-hidden"
+                            rows={1}
+                            style={{ minHeight: 'auto' }}
                           />
-                          <div className="flex items-center gap-1.5">
+                          <div className="space-y-1">
+                            <div className="body-2-regular text-[#47566C] text-xs">
+                              Objetivo de aprendizaje:{' '}
+                              {c.learning_objective ||
+                                'Al finalizar esta clase, los estudiantes podrán comprender y aplicar los conceptos fundamentales abordados, desarrollando las habilidades necesarias para el análisis y la resolución de problemas relacionados con el tema.'}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1.5 pt-1">
                             <div
                               className="w-2 h-2 rounded-full"
                               style={{ backgroundColor: subjectColors[c.subject_id] }}

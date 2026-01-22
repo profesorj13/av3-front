@@ -21,6 +21,7 @@ interface CoordinationStatus {
   document_name?: string;
   coordinator_name?: string;
   class_plan?: any[];
+  document_id?: number;
 }
 
 export function TeacherCourseSubject() {
@@ -28,8 +29,7 @@ export function TeacherCourseSubject() {
   const navigate = useNavigate();
   const csId = parseInt(id || '0');
 
-  const { courses, courseSubjects, setCoordinationStatus, setLessonPlans } = useStore();
-  const getUserArea = useStore((state) => state.getUserArea());
+  const { courses, courseSubjects, subjects, areas, setCoordinationStatus, setLessonPlans } = useStore();
 
   const [students, setStudents] = useState<Student[]>([]);
   const [coordStatus, setCoordStatus] = useState<CoordinationStatus | null>(null);
@@ -39,6 +39,8 @@ export function TeacherCourseSubject() {
 
   const cs = courseSubjects.find((c) => c.id === csId);
   const course = cs ? courses.find((c) => c.id === cs.course_id) : null;
+  const subject = cs ? subjects.find((s) => s.id === cs.subject_id) : null;
+  const subjectArea = subject ? areas.find((a) => a.id === subject.area_id) : null;
 
   useEffect(() => {
     loadData();
@@ -68,12 +70,8 @@ export function TeacherCourseSubject() {
   };
 
   const handleViewCoordinationDocument = () => {
-    // Navigate to coordination document or open modal
-    // This should be implemented based on how the coordination document is accessed
-    if (coordStatus?.document_name) {
-      // For now, let's assume we navigate to a document view
-      // This could be adjusted based on actual requirements
-      console.log('View coordination document:', coordStatus.document_name);
+    if (coordStatus?.document_id) {
+      navigate(`/doc/${coordStatus.document_id}?readonly=true`);
     }
   };
 
@@ -181,7 +179,7 @@ export function TeacherCourseSubject() {
             <CourseInfo
               fields={[
                 { label: 'INSTITUCIÓN', value: 'IFD. N°13' },
-                { label: 'ÁREA', value: getUserArea?.name || 'N/A' },
+                { label: 'ÁREA', value: subjectArea?.name || 'N/A' },
                 { label: 'NIVEL', value: 'Secundaria' },
                 { label: 'TURNO', value: 'Mañana' },
                 { label: 'CICLO LECTIVO', value: '2026' },

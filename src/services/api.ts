@@ -36,6 +36,20 @@ export async function putData<T>(endpoint: string, data: any): Promise<T> {
   return res.json();
 }
 
+export async function patchData<T>(endpoint: string, data: any): Promise<T> {
+  const res = await fetch(`${API_BASE}${endpoint}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    throw new Error(`API error: ${res.statusText}`);
+  }
+  return res.json();
+}
+
 export async function deleteData<T>(endpoint: string): Promise<T> {
   const res = await fetch(`${API_BASE}${endpoint}`, {
     method: 'DELETE',
@@ -74,9 +88,9 @@ export const api = {
     getAll: () => fetchData('/coordination-documents'),
     getById: (id: number) => fetchData(`/coordination-documents/${id}`),
     create: (data: any) => postData('/coordination-documents', data),
-    update: (id: number, data: any) => putData(`/coordination-documents/${id}`, data),
+    update: (id: number, data: any) => patchData(`/coordination-documents/${id}`, data),
     delete: (id: number) => deleteData(`/coordination-documents/${id}`),
-    publish: (id: number) => putData(`/coordination-documents/${id}/publish`, {}),
+    publish: (id: number) => patchData(`/coordination-documents/${id}`, { status: 'published' }),
   },
   courseSubjects: {
     getAll: () => fetchData('/course-subjects'),
@@ -97,7 +111,7 @@ export const api = {
     getById: (id: number) => fetchData(`/teacher-lesson-plans/${id}`),
     getByCourseSubject: (csId: number) => fetchData(`/course-subjects/${csId}/lesson-plans`),
     create: (data: any) => postData('/teacher-lesson-plans', data),
-    update: (id: number, data: any) => putData(`/teacher-lesson-plans/${id}`, data),
+    update: (id: number, data: any) => patchData(`/teacher-lesson-plans/${id}`, data),
     delete: (id: number) => deleteData(`/teacher-lesson-plans/${id}`),
   },
   chat: {
