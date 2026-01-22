@@ -98,6 +98,20 @@ export interface LessonPlan {
     cierre: { activities: any[] };
   };
   category_ids: number[];
+  custom_instruction?: string;
+  resources_mode?: 'global' | 'per_moment';
+  global_font_id?: number | null;
+  moment_font_ids?: { apertura: number | null; desarrollo: number | null; cierre: number | null };
+}
+
+export interface Font {
+  id: number;
+  name: string;
+  description?: string;
+  file_url: string;
+  file_type: string;
+  thumbnail_url?: string;
+  area_id?: number;
 }
 
 export interface ChatMessage {

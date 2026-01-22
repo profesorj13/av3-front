@@ -14,6 +14,7 @@ import type {
   LessonPlan,
   ChatMessage,
   UserRole,
+  Font,
 } from '../types';
 
 interface WizardData {
@@ -46,6 +47,10 @@ interface LessonWizardData {
     desarrollo: { activities: any[] };
     cierre: { activities: any[] };
   };
+  customInstruction: string;
+  resourcesMode: 'global' | 'per_moment';
+  globalFontId: number | null;
+  momentFontIds: { apertura: number | null; desarrollo: number | null; cierre: number | null };
 }
 
 interface AppState {
@@ -61,6 +66,7 @@ interface AppState {
   courseSubjects: CourseSubject[];
   momentTypes: MomentType[];
   activities: Activity[];
+  fonts: Font[];
   wizardData: WizardData;
   currentDocument: CoordinationDocument | null;
   chatHistory: ChatMessage[];
@@ -87,6 +93,7 @@ interface AppState {
   setCourseSubjects: (courseSubjects: CourseSubject[]) => void;
   setMomentTypes: (momentTypes: MomentType[]) => void;
   setActivities: (activities: Activity[]) => void;
+  setFonts: (fonts: Font[]) => void;
   updateWizardData: (data: Partial<WizardData>) => void;
   resetWizardData: () => void;
   setCurrentDocument: (doc: CoordinationDocument | null) => void;
@@ -121,6 +128,7 @@ export const useStore = create<AppState>((set, get) => ({
   courseSubjects: [],
   momentTypes: [],
   activities: [],
+  fonts: [],
   wizardData: {
     step: 1,
     name: '',
@@ -155,6 +163,10 @@ export const useStore = create<AppState>((set, get) => ({
       desarrollo: { activities: [] },
       cierre: { activities: [] },
     },
+    customInstruction: '',
+    resourcesMode: 'global',
+    globalFontId: null,
+    momentFontIds: { apertura: null, desarrollo: null, cierre: null },
   },
   currentLessonPlan: null,
   teacherChatHistory: [],
@@ -171,6 +183,7 @@ export const useStore = create<AppState>((set, get) => ({
   setCourseSubjects: (courseSubjects) => set({ courseSubjects }),
   setMomentTypes: (momentTypes) => set({ momentTypes }),
   setActivities: (activities) => set({ activities }),
+  setFonts: (fonts) => set({ fonts }),
 
   updateWizardData: (data) =>
     set((state) => ({
@@ -237,6 +250,10 @@ export const useStore = create<AppState>((set, get) => ({
           desarrollo: { activities: [] },
           cierre: { activities: [] },
         },
+        customInstruction: '',
+        resourcesMode: 'global',
+        globalFontId: null,
+        momentFontIds: { apertura: null, desarrollo: null, cierre: null },
       },
     }),
 

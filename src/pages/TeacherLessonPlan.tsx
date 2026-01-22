@@ -229,7 +229,7 @@ export function TeacherLessonPlan() {
                       <h4 className="body-1-medium text-secondary-foreground">{mt.name}</h4>
                       {activityNames.length > 0 && (
                         <div>
-                          <p className="body-2-medium text-[#10182B] mb-2">Estrategias didácticas:</p>
+                          <p className="body-2-medium text-[#10182B] mb-2">Actividades:</p>
                           <div className="flex flex-wrap gap-2">
                             {activityNames.map((name: string, idx: number) => (
                               <Badge key={idx} variant="secondary" className="text-xs fill-primary">
