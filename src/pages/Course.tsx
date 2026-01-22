@@ -42,53 +42,55 @@ export function Course() {
       const allDocs = await api.documents.getAll();
       const areaDocs = userArea ? (allDocs as any[]).filter((d) => d.area_id === userArea.id) : [];
 
-      // Build sections from nuclei
-      if (userArea && nuclei.length > 0) {
-        const midpoint = Math.ceil(nuclei.length / 2);
-        const firstSemesterNuclei = nuclei.slice(0, midpoint);
-        const secondSemesterNuclei = nuclei.slice(midpoint);
+      // Build sections from knowledge areas
+      if (userArea && knowledgeAreas.length > 0) {
+        const midpoint = Math.ceil(knowledgeAreas.length / 2);
+        const firstSemesterKnowledgeAreas = knowledgeAreas.slice(0, midpoint);
+        const secondSemesterKnowledgeAreas = knowledgeAreas.slice(midpoint);
 
         const sections: DocumentSection[] = [];
 
         // Helper function to build topics with document status
-        const buildTopics = (nucleiList: any[]) => {
-          return nucleiList.map((nucleus) => {
-            const nucleusKnowledgeAreas = knowledgeAreas.filter((ka) => ka.nucleus_id === nucleus.id);
-            const nucleusCategoryCount = categories.filter((cat) =>
-              nucleusKnowledgeAreas.some((ka) => ka.id === cat.knowledge_area_id),
-            ).length;
+        const buildTopics = (knowledgeAreasList: any[]) => {
+          return knowledgeAreasList.map((knowledgeArea) => {
+            const knowledgeAreaCategories = categories.filter((cat) => cat.knowledge_area_id === knowledgeArea.id);
+            const categoryCount = knowledgeAreaCategories.length;
 
-            // Find if there's a document for this nucleus
-            const existingDoc = areaDocs.find((doc: any) => doc.nucleus_ids && doc.nucleus_ids.includes(nucleus.id));
+            // Find if there's a document for this knowledge area's nucleus
+            const nucleus = nuclei.find((n) => n.id === knowledgeArea.nucleus_id);
+            const existingDoc = nucleus
+              ? areaDocs.find((doc: any) => doc.nucleus_ids && doc.nucleus_ids.includes(nucleus.id))
+              : undefined;
 
             return {
-              id: nucleus.id,
-              name: nucleus.name,
+              id: knowledgeArea.id,
+              name: knowledgeArea.name,
               status: (existingDoc ? (existingDoc.status === 'published' ? 'completed' : 'in_progress') : 'pending') as
                 | 'pending'
                 | 'in_progress'
                 | 'completed',
-              categoriesCount: nucleusCategoryCount,
+              categoriesCount: categoryCount,
               documentId: existingDoc?.id,
+              nucleusId: knowledgeArea.nucleus_id,
             };
           });
         };
 
         // Primer cuatrimestre
-        if (firstSemesterNuclei.length > 0) {
+        if (firstSemesterKnowledgeAreas.length > 0) {
           sections.push({
             id: 1,
             name: 'Primer cuatrimestre',
-            topics: buildTopics(firstSemesterNuclei),
+            topics: buildTopics(firstSemesterKnowledgeAreas),
           });
         }
 
         // Segundo cuatrimestre
-        if (secondSemesterNuclei.length > 0) {
+        if (secondSemesterKnowledgeAreas.length > 0) {
           sections.push({
             id: 2,
             name: 'Segundo cuatrimestre',
-            topics: buildTopics(secondSemesterNuclei),
+            topics: buildTopics(secondSemesterKnowledgeAreas),
           });
         }
 
@@ -101,7 +103,24 @@ export function Course() {
     }
   };
 
-  const handleCreateDocument = () => {
+  const handleCreateDocument = (knowledgeAreaId?: number) => {
+    if (knowledgeAreaId) {
+      // Find the knowledge area and its associated data
+      const knowledgeArea = knowledgeAreas.find((ka) => ka.id === knowledgeAreaId);
+      const nucleus = knowledgeArea ? nuclei.find((n) => n.id === knowledgeArea.nucleus_id) : undefined;
+      const areaCategories = categories.filter((cat) => cat.knowledge_area_id === knowledgeAreaId);
+
+      if (knowledgeArea && nucleus) {
+        // Update wizard data with the specific knowledge area information
+        useStore.getState().updateWizardData({
+          knowledgeAreaId: knowledgeArea.id,
+          knowledgeAreaName: knowledgeArea.name,
+          nucleusId: nucleus.id,
+          nucleusDescription: nucleus.description || '',
+          categoryIds: areaCategories.map((cat) => cat.id),
+        });
+      }
+    }
     navigate(`/curso/${courseId}/crear`);
   };
 
@@ -127,7 +146,7 @@ export function Course() {
       <TabsCustom defaultValue="about" className="w-full">
         <TabsCustomList className="mb-8">
           <TabsCustomTrigger value="about">Detalle del curso</TabsCustomTrigger>
-          <TabsCustomTrigger value="classes">Doc. de coordenadas</TabsCustomTrigger>
+          <TabsCustomTrigger value="classes">Itinerario del área</TabsCustomTrigger>
         </TabsCustomList>
 
         <TabsCustomContent value="about" className="space-y-6">

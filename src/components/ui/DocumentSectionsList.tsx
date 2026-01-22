@@ -9,6 +9,7 @@ export interface DocumentTopic {
   status: 'pending' | 'in_progress' | 'completed';
   categoriesCount: number;
   documentId?: number;
+  nucleusId?: number;
 }
 
 export interface DocumentSection {

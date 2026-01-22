@@ -99,6 +99,16 @@ export function Wizard() {
   }, [wizardData.startDate, wizardData.endDate, areaSubjects, currentCourse]);
 
   const getFilteredCategories = () => {
+    // If we have a specific knowledge area, use its categories
+    if (wizardData.knowledgeAreaId) {
+      return categories.filter((c) => {
+        // Find knowledge areas that match the specific knowledge area ID
+        const relevantKnowledgeAreas = knowledgeAreas.filter((ka) => ka.id === wizardData.knowledgeAreaId);
+        return relevantKnowledgeAreas.some((ka) => c.knowledge_area_id === ka.id);
+      });
+    }
+
+    // Fallback to original logic if no specific knowledge area is set
     if (wizardData.nucleusIds.length === 0) return [];
 
     const knowledgeAreaIds = knowledgeAreas
@@ -125,7 +135,7 @@ export function Wizard() {
       end_date: wizardData.endDate,
       methodological_strategies: null,
       subjects_data: Object.keys(subjectsData).length > 0 ? subjectsData : null,
-      nucleus_ids: wizardData.nucleusIds,
+      nucleus_ids: wizardData.nucleusId ? [wizardData.nucleusId] : wizardData.nucleusIds,
       category_ids: wizardData.categoryIds,
     };
 
@@ -174,7 +184,7 @@ export function Wizard() {
           {wizardData.step === 1 && (
             <div className="space-y-6">
               <div className="space-y-2">
-                <h2 className="title-2-bold text-[#2C2C2C]">Detalles del documento de coordenadas</h2>
+                <h2 className="title-2-bold text-[#2C2C2C]">Detalles del itinerario del área</h2>
                 <p className="body-2-regular text-[#2C2C2C]">
                   Antes de comenzar, revisá el marco del área sobre el que se construye este documento.
                 </p>
@@ -183,7 +193,9 @@ export function Wizard() {
               <div className="activity-card-bg p-4 space-y-2 rounded-2xl">
                 <div className="mb-6">
                   <h3 className="headline-1-bold text-secondary-foreground mb-2">Conocimiento y saber</h3>
-                  <p className="body-2-regular text-secondary-foreground">Revolución Negra de Haití</p>
+                  <p className="body-2-regular text-secondary-foreground">
+                    {wizardData.knowledgeAreaName || 'Conocimiento y saber'}
+                  </p>
                 </div>
 
                 <div className="h-px bg-[#DAD5F6]" />
@@ -191,11 +203,7 @@ export function Wizard() {
                 <div className="py-4">
                   <h3 className="headline-1-bold text-secondary-foreground mb-2">Núcleo problemático del área</h3>
                   <p className="body-2-regular text-secondary-foreground">
-                    Las y los sujetos subalternizados problematizan lo naturalizado y construyen, desde sus resistencias
-                    y luchas, la posibilidad de buenos vivires en torno al reconocimiento de las otredades
-                    interseccionadas, visibilizando la multiplicidad de conocimientos y construcciones colectivas que
-                    buscan resolver las problemáticas sociales, territoriales, ambientales, políticas y económicas,
-                    empoderando subjetividad-es y comunidades en horizontes emancipadores.
+                    {wizardData.nucleusDescription || 'Descripción del núcleo problemático'}
                   </p>
                 </div>
 
