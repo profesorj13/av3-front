@@ -25,7 +25,12 @@ export function Document() {
   } = useStore();
 
   const [isChatGenerating, setIsChatGenerating] = useState(false);
-  const [editingContent, setEditingContent] = useState<{ strategy?: string; title?: string }>({});
+  const [editingContent, setEditingContent] = useState<{
+    strategy?: string;
+    title?: string;
+    problematicAxis?: string;
+    evaluationCriteria?: string;
+  }>({});
   const [isChatCollapsed, setIsChatCollapsed] = useState(false);
   const [isClassesCollapsed, setIsClassesCollapsed] = useState(false);
   const [editingClassTitle, setEditingClassTitle] = useState<{ subjectId: number; classNumber: number } | null>(null);
@@ -172,14 +177,17 @@ export function Document() {
     }
   };
 
-  const handleContentEdit = (field: 'strategy' | 'title', content: string) => {
+  const handleContentEdit = (
+    field: 'strategy' | 'title' | 'problematicAxis' | 'evaluationCriteria',
+    content: string,
+  ) => {
     setEditingContent((prev) => ({
       ...prev,
       [field]: content,
     }));
   };
 
-  const handleSaveContent = async (field: 'strategy' | 'title') => {
+  const handleSaveContent = async (field: 'strategy' | 'title' | 'problematicAxis' | 'evaluationCriteria') => {
     try {
       const updatedContent = editingContent[field];
       if (!updatedContent || !currentDocument) return;
@@ -190,6 +198,10 @@ export function Document() {
         updateData = { name: updatedContent };
       } else if (field === 'strategy') {
         updateData = { methodological_strategies: updatedContent };
+      } else if (field === 'problematicAxis') {
+        updateData = { problematic_axis: updatedContent };
+      } else if (field === 'evaluationCriteria') {
+        updateData = { evaluation_criteria: updatedContent };
       }
 
       await api.documents.update(docId, updateData);
@@ -432,6 +444,158 @@ export function Document() {
                     )}
                   </div>
                 )}
+
+                {/* Eje Problemático Section */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="headline-1-bold text-[#10182B]">Eje problemático</h3>
+                    {hasContent && !isGenerating && !isReadOnly && (
+                      <button
+                        onClick={() =>
+                          handleContentEdit('problematicAxis', (currentDocument as any).problematic_axis || '')
+                        }
+                        className="text-xs text-blue-600 hover:text-blue-800 cursor-pointer"
+                      >
+                        Editar
+                      </button>
+                    )}
+                  </div>
+                  {isGenerating ? (
+                    <div className="flex flex-col items-center justify-center py-12">
+                      <Loader2 className="w-8 h-8 animate-spin text-primary mb-2" />
+                      <p className="body-2-regular text-[#47566C]">Generando contenido con IA...</p>
+                    </div>
+                  ) : (
+                    <div>
+                      {editingContent.problematicAxis !== undefined && !isReadOnly ? (
+                        <div className="space-y-2">
+                          <textarea
+                            value={editingContent.problematicAxis}
+                            onChange={(e) => handleContentEdit('problematicAxis', e.target.value)}
+                            className="w-full p-3 border border-gray-300 rounded-lg body-2-regular text-secondary-foreground leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 whitespace-pre-wrap"
+                            rows={8}
+                            placeholder="Editá el eje problemático..."
+                          />
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleSaveContent('problematicAxis')}
+                              className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 cursor-pointer"
+                            >
+                              Guardar
+                            </button>
+                            <button
+                              onClick={() => {
+                                setEditingContent((prev) => {
+                                  const newState = { ...prev };
+                                  delete newState.problematicAxis;
+                                  return newState;
+                                });
+                              }}
+                              className="px-3 py-1 bg-gray-300 text-gray-700 text-sm rounded hover:bg-gray-400 cursor-pointer"
+                            >
+                              Cancelar
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div
+                          className={`body-2-regular text-secondary-foreground whitespace-pre-wrap ${!isReadOnly ? 'cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors' : 'p-2'}`}
+                          onClick={
+                            !isReadOnly
+                              ? () => handleContentEdit('problematicAxis', (currentDocument as any).problematic_axis)
+                              : undefined
+                          }
+                          title={!isReadOnly ? 'Clic para editar' : ''}
+                        >
+                          {hasContent ? (
+                            (currentDocument as any).problematic_axis ||
+                            'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.'
+                          ) : (
+                            <p className="text-[#47566C]/60 italic">Generando contenido con IA...</p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Criterios de Evaluación Section */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="headline-1-bold text-[#10182B]">Criterios de evaluación</h3>
+                    {hasContent && !isGenerating && !isReadOnly && (
+                      <button
+                        onClick={() =>
+                          handleContentEdit('evaluationCriteria', (currentDocument as any).evaluation_criteria || '')
+                        }
+                        className="text-xs text-blue-600 hover:text-blue-800 cursor-pointer"
+                      >
+                        Editar
+                      </button>
+                    )}
+                  </div>
+                  {isGenerating ? (
+                    <div className="flex flex-col items-center justify-center py-12">
+                      <Loader2 className="w-8 h-8 animate-spin text-primary mb-2" />
+                      <p className="body-2-regular text-[#47566C]">Generando contenido con IA...</p>
+                    </div>
+                  ) : (
+                    <div>
+                      {editingContent.evaluationCriteria !== undefined && !isReadOnly ? (
+                        <div className="space-y-2">
+                          <textarea
+                            value={editingContent.evaluationCriteria}
+                            onChange={(e) => handleContentEdit('evaluationCriteria', e.target.value)}
+                            className="w-full p-3 border border-gray-300 rounded-lg body-2-regular text-secondary-foreground leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 whitespace-pre-wrap"
+                            rows={8}
+                            placeholder="Editá los criterios de evaluación..."
+                          />
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleSaveContent('evaluationCriteria')}
+                              className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 cursor-pointer"
+                            >
+                              Guardar
+                            </button>
+                            <button
+                              onClick={() => {
+                                setEditingContent((prev) => {
+                                  const newState = { ...prev };
+                                  delete newState.evaluationCriteria;
+                                  return newState;
+                                });
+                              }}
+                              className="px-3 py-1 bg-gray-300 text-gray-700 text-sm rounded hover:bg-gray-400 cursor-pointer"
+                            >
+                              Cancelar
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div
+                          className={`body-2-regular text-secondary-foreground whitespace-pre-wrap ${!isReadOnly ? 'cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors' : 'p-2'}`}
+                          onClick={
+                            !isReadOnly
+                              ? () =>
+                                  handleContentEdit(
+                                    'evaluationCriteria',
+                                    (currentDocument as any).evaluation_criteria ||
+                                      '• Claridad en la presentación de conceptos\n• Coherencia en la argumentación\n• Uso adecuado de terminología técnica\n• Aplicación práctica de los contenidos',
+                                  )
+                              : undefined
+                          }
+                          title={!isReadOnly ? 'Clic para editar' : ''}
+                        >
+                          {hasContent ? (
+                            '• Claridad en la presentación de conceptos\n• Coherencia en la argumentación\n• Uso adecuado de terminología técnica\n• Aplicación práctica de los contenidos'
+                          ) : (
+                            <p className="text-[#47566C]/60 italic">Generando contenido con IA...</p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
