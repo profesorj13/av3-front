@@ -26,6 +26,10 @@ interface WizardData {
   endDate: string;
   subjectsData: Record<string, any>;
   subjectCategories: Record<string, any>;
+  knowledgeAreaId?: number;
+  knowledgeAreaName?: string;
+  nucleusId?: number;
+  nucleusDescription?: string;
 }
 
 interface LessonWizardData {

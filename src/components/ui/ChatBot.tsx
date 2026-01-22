@@ -76,7 +76,7 @@ export function ChatBot({
     >
       {/* Header */}
       <div
-        className={`${collapsed ? 'p-4 justify-center' : 'p-4 border-b border-muted justify-between'} flex items-center`}
+        className={`${collapsed ? 'p-4 justify-center' : 'p-4 border-b border-muted justify-between'} flex items-center h-14`}
       >
         {!collapsed && <h3 className="headline-1-bold text-[#10182B]">Chat Alizia</h3>}
         <button

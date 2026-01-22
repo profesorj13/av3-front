@@ -263,7 +263,7 @@ export function Document() {
         {/* Center - AI Generated Content */}
         <div className="flex-1 flex flex-col activity-card-bg rounded-2xl overflow-hidden">
           {/* Document Title Header */}
-          <div className="p-4 px-6 border-b border-muted flex flex-row items-center justify-between">
+          <div className="p-4 px-6 border-b border-muted flex flex-row items-center justify-between h-14">
             <div className="flex-1">
               {editingContent.title !== undefined ? (
                 <div className="flex items-center gap-2">
@@ -428,7 +428,7 @@ export function Document() {
         {/* Right Sidebar - Classes by Discipline */}
         {!isClassesCollapsed && (
           <div className="w-80 flex flex-col activity-card-bg rounded-2xl overflow-hidden">
-            <div className="p-4 border-b border-muted flex items-center justify-between">
+            <div className="p-4 border-b border-muted flex items-center justify-between h-14">
               <h3 className="headline-1-bold text-[#10182B]">Clases por disciplinas</h3>
               <button
                 onClick={() => setIsClassesCollapsed(true)}
@@ -582,23 +582,11 @@ export function Document() {
                 <p className="body-2-regular text-[#47566C] text-center">No hay materias configuradas</p>
               )}
 
-              {/* Unassigned Categories Warning */}
+              {/* Loading state for unassigned categories */}
               {unassignedCategories.length > 0 && (
-                <div className="mt-4 fill-primary rounded-xl p-3 border-l-4 border-yellow-500">
-                  <div className="flex gap-2">
-                    <div className="text-lg">⚠️</div>
-                    <div className="flex-1">
-                      <h4 className="body-2-medium text-[#10182B] mb-1 text-xs">Conceptos sin asignar:</h4>
-                      <div className="flex flex-wrap gap-1 mb-1">
-                        {unassignedCategories.map((cat: { id: number; name: string }) => (
-                          <span key={cat.id} className="px-2 py-0.5 rounded-md bg-yellow-100 text-yellow-800 text-xs">
-                            {cat.name}
-                          </span>
-                        ))}
-                      </div>
-                      <p className="body-2-regular text-[#47566C] text-xs">Haz clic en + para asignar.</p>
-                    </div>
-                  </div>
+                <div className="flex flex-col items-center justify-center py-12">
+                  <Loader2 className="w-8 h-8 animate-spin text-primary mb-2" />
+                  <p className="body-2-regular text-[#47566C]">Generando clases con IA...</p>
                 </div>
               )}
             </div>
