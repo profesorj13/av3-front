@@ -106,6 +106,10 @@ export const api = {
   activities: {
     getAll: () => fetchData('/activities'),
   },
+  fonts: {
+    getAll: (areaId?: number) => fetchData(`/fonts${areaId ? `?area_id=${areaId}` : ''}`),
+    getById: (id: number) => fetchData(`/fonts/${id}`),
+  },
   lessonPlans: {
     getAll: () => fetchData('/lesson-plans'),
     getById: (id: number) => fetchData(`/teacher-lesson-plans/${id}`),

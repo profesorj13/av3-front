@@ -5,9 +5,12 @@ import { useStore } from '@/store/useStore';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
+import { CustomizationPanel } from '@/components/ui/CustomizationPanel';
 import { api } from '@/services/api';
+import type { Font } from '@/types';
 
 export function TeacherPlanWizard() {
   const { csId, classNumber } = useParams();
@@ -23,7 +26,14 @@ export function TeacherPlanWizard() {
     categories,
     activities,
     coordinationStatus,
+    fonts,
+    setFonts,
+    courseSubjects,
+    subjects,
   } = useStore();
+
+  // Get the current course subject from the store using the URL param
+  const currentCourseSubject = courseSubjects.find(cs => cs.id === courseSubjectId);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentMoment, setCurrentMoment] = useState<string>('');
@@ -40,6 +50,22 @@ export function TeacherPlanWizard() {
       });
     }
   }, []);
+
+  // Fetch fonts when component mounts
+  useEffect(() => {
+    const fetchFonts = async () => {
+      try {
+        // Get area_id from subject
+        const subject = subjects.find((s) => s.id === currentCourseSubject?.subject_id);
+        const areaId = subject?.area_id;
+        const fontsData = await api.fonts.getAll(areaId) as Font[];
+        setFonts(fontsData);
+      } catch (error) {
+        console.error('Error loading fonts:', error);
+      }
+    };
+    fetchFonts();
+  }, [courseSubjectId, courseSubjects, subjects, setFonts]);
 
   const openModal = (momentKey: string) => {
     setCurrentMoment(momentKey);
@@ -80,7 +106,7 @@ export function TeacherPlanWizard() {
 
   const handleCreatePlan = async () => {
     if (!coordinationStatus || !coordinationStatus.has_published_document) {
-      alert('No hay documento de coordinación publicado');
+      alert('No hay documento de coordinacion publicado');
       return;
     }
 
@@ -95,6 +121,10 @@ export function TeacherPlanWizard() {
       didactic_strategies: lessonWizardData.didacticStrategies || '',
       class_format: lessonWizardData.classFormat || '',
       moments: lessonWizardData.moments,
+      custom_instruction: lessonWizardData.customInstruction || null,
+      resources_mode: lessonWizardData.resourcesMode,
+      global_font_id: lessonWizardData.globalFontId,
+      moment_font_ids: lessonWizardData.momentFontIds,
     };
 
     try {
@@ -113,14 +143,14 @@ export function TeacherPlanWizard() {
   const availableCategories = categories.filter((c) => documentCategoryIds.includes(c.id));
 
   const momentTypes = [
-    { key: 'apertura', name: 'Apertura/Motivación', description: 'Momento inicial de la clase' },
-    { key: 'desarrollo', name: 'Desarrollo/Construcción', description: 'Momento central de la clase' },
-    { key: 'cierre', name: 'Cierre/Metacognición', description: 'Momento final de reflexión' },
+    { key: 'apertura', name: 'Apertura/Motivacion', description: 'Momento inicial de la clase' },
+    { key: 'desarrollo', name: 'Desarrollo/Construccion', description: 'Momento central de la clase' },
+    { key: 'cierre', name: 'Cierre/Metacognicion', description: 'Momento final de reflexion' },
   ];
 
   const allMomentsHaveActivities = momentTypes.every((moment) => {
-    const activities = lessonWizardData.moments[moment.key as keyof typeof lessonWizardData.moments].activities || [];
-    return activities.length > 0;
+    const activitiesList = lessonWizardData.moments[moment.key as keyof typeof lessonWizardData.moments].activities || [];
+    return activitiesList.length > 0;
   });
 
   return (
@@ -151,17 +181,22 @@ export function TeacherPlanWizard() {
               <div className="space-y-2">
                 <h2 className="title-2-bold text-[#2C2C2C]">Detalles de la clase</h2>
                 <p className="body-2-regular text-[#2C2C2C]">
-                  Revisá la información de la clase antes de continuar con la planificación.
+                  Revisa la informacion de la clase antes de continuar con la planificacion.
                 </p>
               </div>
 
               <div className="activity-card-bg p-4 space-y-2 rounded-2xl">
                 <div className="mb-6">
                   <h3 className="headline-1-bold text-secondary-foreground mb-2">Objetivo</h3>
-                  <p className="body-2-regular text-secondary-foreground">
-                    El objetivo de esta clase es que los estudiantes comprendan la importancia de la educación en la
-                    sociedad moderna.
+                  <p className="text-xs text-muted-foreground mb-2">
+                    El objetivo de la clase fue elegido en el itinerario del area. Podes modificarlo si es necesario.
                   </p>
+                  <Textarea
+                    value={lessonWizardData.objective}
+                    onChange={(e) => updateLessonWizardData({ objective: e.target.value })}
+                    placeholder="Ingresa el objetivo de la clase..."
+                    className="min-h-[100px] resize-none"
+                  />
                 </div>
 
                 <div className="h-px bg-[#DAD5F6]" />
@@ -169,15 +204,15 @@ export function TeacherPlanWizard() {
                 <div className="py-4 space-y-4">
                   <h3 className="headline-1-bold text-secondary-foreground mb-2">Nudos disciplinares</h3>
                   <p className="body-2-regular text-secondary-foreground">
-                    Análisis de las formas de ser y estar humanas en distintos tiempos, espacios y territorios, y de
-                    cómo esas concepciones se disputan históricamente.
+                    Analisis de las formas de ser y estar humanas en distintos tiempos, espacios y territorios, y de
+                    como esas concepciones se disputan historicamente.
                   </p>
                   <p className="body-2-regular text-secondary-foreground">
-                    Estudio de la conquista y colonización de América como base del sistema
+                    Estudio de la conquista y colonizacion de America como base del sistema
                     capitalista-patriarcal-colonial moderno, y de la centralidad europea como proyecto universal.
                   </p>
                   <p className="body-2-regular text-secondary-foreground">
-                    Reflexión sobre los modos de producción, las relaciones de dominación sobre cuerpos y territorios, y
+                    Reflexion sobre los modos de produccion, las relaciones de dominacion sobre cuerpos y territorios, y
                     los procesos sociales que impulsan nuevas relaciones humanas emancipadoras
                   </p>
                 </div>
@@ -185,11 +220,11 @@ export function TeacherPlanWizard() {
                 <div className="h-px bg-[#DAD5F6]" />
 
                 <div className="py-4">
-                  <h3 className="headline-1-bold text-secondary-foreground mb-2">Categorías a trabajar</h3>
+                  <h3 className="headline-1-bold text-secondary-foreground mb-2">Categorias a trabajar</h3>
                   <ul className="space-y-1">
                     {availableCategories.map((c) => (
                       <li key={c.id} className="body-2-regular text-secondary-foreground flex items-start">
-                        <span className="mr-2">•</span>
+                        <span className="mr-2">-</span>
                         <span>{c.name}</span>
                       </li>
                     ))}
@@ -202,54 +237,76 @@ export function TeacherPlanWizard() {
           {lessonWizardData.step === 2 && (
             <div className="space-y-6">
               <div className="space-y-2">
-                <h2 className="title-2-bold text-[#2C2C2C]">Momentos y estrategias didácticas</h2>
+                <h2 className="title-2-bold text-[#2C2C2C]">Momentos y actividades</h2>
                 <p className="body-2-regular text-[#2C2C2C]">
-                  Seleccioná las estrategias didácticas que se trabajarán en cada momento de la clase.
+                  Selecciona las actividades que se trabajaran en cada momento de la clase.
                 </p>
               </div>
 
-              <div className="space-y-6">
-                {momentTypes.map((moment) => {
-                  const selectedActivityIds =
-                    lessonWizardData.moments[moment.key as keyof typeof lessonWizardData.moments].activities || [];
-                  const selectedActivities = activities.filter((act) => selectedActivityIds.includes(act.id));
+              <div className="flex gap-6">
+                {/* Left column - Moments */}
+                <div className="flex-1 space-y-6">
+                  {momentTypes.map((moment) => {
+                    const selectedActivityIds =
+                      lessonWizardData.moments[moment.key as keyof typeof lessonWizardData.moments].activities || [];
+                    const selectedActivities = activities.filter((act) => selectedActivityIds.includes(act.id));
 
-                  return (
-                    <div key={moment.key} className="space-y-3 activity-card-bg rounded-2xl p-4">
-                      <h3 className="body-1-medium text-secondary-foreground">{moment.name}</h3>
+                    return (
+                      <div key={moment.key} className="space-y-3 activity-card-bg rounded-2xl p-4">
+                        <h3 className="body-1-medium text-secondary-foreground">{moment.name}</h3>
 
-                      {selectedActivities.length > 0 && (
-                        <div className="flex flex-wrap gap-2">
-                          {selectedActivities.map((activity) => (
-                            <Badge
-                              key={activity.id}
-                              variant="secondary"
-                              className="flex items-center gap-1 px-3 py-1 rounded-lg fill-primary!"
-                            >
-                              {activity.name}
-                              <button
-                                type="button"
-                                onClick={() => removeActivity(moment.key, activity.id)}
-                                className="ml-1 cursor-pointer"
+                        {selectedActivities.length > 0 && (
+                          <div className="flex flex-wrap gap-2">
+                            {selectedActivities.map((activity) => (
+                              <Badge
+                                key={activity.id}
+                                variant="secondary"
+                                className="flex items-center gap-1 px-3 py-1 rounded-lg fill-primary!"
                               >
-                                <X className="w-3 h-3" />
-                              </button>
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
+                                {activity.name}
+                                <button
+                                  type="button"
+                                  onClick={() => removeActivity(moment.key, activity.id)}
+                                  className="ml-1 cursor-pointer"
+                                >
+                                  <X className="w-3 h-3" />
+                                </button>
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
 
-                      <button
-                        type="button"
-                        onClick={() => openModal(moment.key)}
-                        className="flex items-center gap-2 headline-2-semi-bold text-secondary-foreground transition-colors cursor-pointer"
-                      >
-                        <Plus className="w-4 h-4" />
-                        Agregar estrategias
-                      </button>
-                    </div>
-                  );
-                })}
+                        <button
+                          type="button"
+                          onClick={() => openModal(moment.key)}
+                          className="flex items-center gap-2 headline-2-semi-bold text-secondary-foreground transition-colors cursor-pointer"
+                        >
+                          <Plus className="w-4 h-4" />
+                          Agregar actividad
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Right column - Customization Panel */}
+                <div className="w-80 flex-shrink-0">
+                  <CustomizationPanel
+                    customInstruction={lessonWizardData.customInstruction}
+                    onCustomInstructionChange={(value) => updateLessonWizardData({ customInstruction: value })}
+                    resourcesMode={lessonWizardData.resourcesMode}
+                    onResourcesModeChange={(mode) => updateLessonWizardData({ resourcesMode: mode })}
+                    globalFontId={lessonWizardData.globalFontId}
+                    onGlobalFontChange={(fontId) => updateLessonWizardData({ globalFontId: fontId })}
+                    momentFontIds={lessonWizardData.momentFontIds}
+                    onMomentFontChange={(moment, fontId) =>
+                      updateLessonWizardData({
+                        momentFontIds: { ...lessonWizardData.momentFontIds, [moment]: fontId },
+                      })
+                    }
+                    fonts={fonts}
+                  />
+                </div>
               </div>
             </div>
           )}
@@ -284,11 +341,11 @@ export function TeacherPlanWizard() {
         </div>
       </div>
 
-      {/* Modal para seleccionar estrategias */}
+      {/* Modal para seleccionar actividades */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Agregar estrategias didácticas</DialogTitle>
+            <DialogTitle>Agregar actividades</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
@@ -313,7 +370,7 @@ export function TeacherPlanWizard() {
           <DialogFooter className="flex-row! justify-between! items-center w-full">
             <span className="text-sm text-muted-foreground">
               {selectedActivitiesInModal.length}{' '}
-              {selectedActivitiesInModal.length === 1 ? 'Estrategia seleccionada' : 'Estrategias seleccionadas'}
+              {selectedActivitiesInModal.length === 1 ? 'Actividad seleccionada' : 'Actividades seleccionadas'}
             </span>
             <div className="flex gap-2">
               <Button
