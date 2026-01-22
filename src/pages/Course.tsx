@@ -146,7 +146,7 @@ export function Course() {
       <TabsCustom defaultValue="about" className="w-full">
         <TabsCustomList className="mb-8">
           <TabsCustomTrigger value="about">Detalle del curso</TabsCustomTrigger>
-          <TabsCustomTrigger value="classes">Doc. de coordenadas</TabsCustomTrigger>
+          <TabsCustomTrigger value="classes">Itinerario del área</TabsCustomTrigger>
         </TabsCustomList>
 
         <TabsCustomContent value="about" className="space-y-6">

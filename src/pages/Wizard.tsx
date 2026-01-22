@@ -184,7 +184,7 @@ export function Wizard() {
           {wizardData.step === 1 && (
             <div className="space-y-6">
               <div className="space-y-2">
-                <h2 className="title-2-bold text-[#2C2C2C]">Detalles del documento de coordenadas</h2>
+                <h2 className="title-2-bold text-[#2C2C2C]">Detalles del itinerario del área</h2>
                 <p className="body-2-regular text-[#2C2C2C]">
                   Antes de comenzar, revisá el marco del área sobre el que se construye este documento.
                 </p>

@@ -161,7 +161,7 @@ export function TeacherCourseSubject() {
             className="flex items-center gap-2 text-primary bg-muted border-none cursor-pointer rounded-xl hover:bg-muted hover:text-primary"
           >
             <File className="w-4 h-4 text-primary" />
-            Documento de coordenadas
+            Itinerario del área
           </Button>
         )}
       </div>

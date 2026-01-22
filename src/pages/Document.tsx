@@ -221,7 +221,7 @@ export function Document() {
             <ChevronLeft className="w-6 h-6 text-[#10182B]" />
           </button>
         </div>
-        <h1 className="title-2-bold text-[#10182B]">Documento de coordenadas</h1>
+        <h1 className="title-2-bold text-[#10182B]">Itinerario del área</h1>
         <div className="flex items-center gap-3">
           <Button
             onClick={currentDocument.status !== 'published' ? handlePublishDocument : undefined}
