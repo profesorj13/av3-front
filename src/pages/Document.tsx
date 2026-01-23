@@ -314,14 +314,14 @@ export function Document() {
         <div className="flex-1 flex flex-col activity-card-bg rounded-2xl overflow-hidden">
           {/* Document Title Header */}
           <div className="p-4 px-6 border-b border-muted flex flex-row items-center justify-between h-14">
-            <div className="flex-1">
+            <div className="flex-1 min-w-0 mr-4">
               {editingContent.title !== undefined ? (
                 <div className="flex items-center gap-2">
                   <input
                     type="text"
                     value={editingContent.title}
                     onChange={(e) => handleContentEdit('title', e.target.value)}
-                    className="headline-1-bold text-[#10182B] bg-transparent border-b-2 border-blue-500 focus:outline-none focus:border-blue-600 px-1 py-0"
+                    className="headline-1-bold text-[#10182B] bg-transparent border-b-2 border-blue-500 focus:outline-none focus:border-blue-600 px-1 py-0 max-w-md"
                     placeholder="Título del documento"
                   />
                   <button
@@ -345,9 +345,9 @@ export function Document() {
                 </div>
               ) : (
                 <h2
-                  className={`headline-1-bold text-[#10182B] ${!isReadOnly ? 'cursor-pointer hover:bg-gray-50 px-2 py-1 rounded transition-colors' : ''}`}
+                  className={`headline-1-bold text-[#10182B] truncate ${!isReadOnly ? 'cursor-pointer hover:bg-[#F5F3FF] px-2 py-1 rounded transition-colors' : ''}`}
                   onClick={!isReadOnly ? () => handleContentEdit('title', currentDocument.name) : undefined}
-                  title={!isReadOnly ? 'Clic para editar' : ''}
+                  title={!isReadOnly ? 'Clic para editar' : currentDocument.name}
                 >
                   {currentDocument.name}
                 </h2>
@@ -418,7 +418,7 @@ export function Document() {
                         </div>
                       ) : (
                         <div
-                          className={`section-description text-[#324155] leading-relaxed whitespace-pre-wrap ${!isReadOnly ? 'cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors' : 'p-2'}`}
+                          className={`section-description text-[#324155] leading-relaxed whitespace-pre-wrap ${!isReadOnly ? 'cursor-pointer hover:bg-[#F5F3FF] p-2 rounded transition-colors' : 'p-2'}`}
                           onClick={
                             !isReadOnly
                               ? () => handleContentEdit('problem_edge', currentDocument.problem_edge || '')
@@ -530,7 +530,7 @@ export function Document() {
                         </div>
                       ) : (
                         <div
-                          className={`section-description text-[#324155] leading-relaxed whitespace-pre-wrap ${!isReadOnly ? 'cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors' : 'p-2'}`}
+                          className={`section-description text-[#324155] leading-relaxed whitespace-pre-wrap ${!isReadOnly ? 'cursor-pointer hover:bg-[#F5F3FF] p-2 rounded transition-colors' : 'p-2'}`}
                           onClick={
                             !isReadOnly
                               ? () =>
@@ -598,7 +598,7 @@ export function Document() {
                         </div>
                       ) : (
                         <div
-                          className={`section-description text-[#324155] leading-relaxed ${!isReadOnly ? 'cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors' : 'p-2'}`}
+                          className={`section-description text-[#324155] leading-relaxed ${!isReadOnly ? 'cursor-pointer hover:bg-[#F5F3FF] p-2 rounded transition-colors' : 'p-2'}`}
                           onClick={
                             !isReadOnly
                               ? () => handleContentEdit('eval_criteria', currentDocument.eval_criteria || '')
