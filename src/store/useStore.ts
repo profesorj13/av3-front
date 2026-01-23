@@ -10,12 +10,14 @@ import type {
   CoordinationDocument,
   CourseSubject,
   MomentType,
-  Activity,
+  ActivitiesByMoment,
+  ActivityRecommendation,
   LessonPlan,
   LessonPlanMoments,
   ChatMessage,
   UserRole,
   Font,
+  Resource,
 } from '../types';
 
 interface WizardData {
@@ -62,7 +64,8 @@ interface AppState {
   documents: CoordinationDocument[];
   courseSubjects: CourseSubject[];
   momentTypes: MomentType[];
-  activities: Activity[];
+  activitiesByMoment: ActivitiesByMoment;
+  activityRecommendations: ActivityRecommendation | null;
   fonts: Font[];
   wizardData: WizardData;
   currentDocument: CoordinationDocument | null;
@@ -77,6 +80,8 @@ interface AppState {
   lessonWizardData: LessonWizardData;
   currentLessonPlan: LessonPlan | null;
   teacherChatHistory: ChatMessage[];
+  resources: Resource[];
+  currentResource: Resource | null;
 
   setUsers: (users: User[]) => void;
   setCurrentUser: (user: User | null) => void;
@@ -89,7 +94,8 @@ interface AppState {
   setDocuments: (documents: CoordinationDocument[]) => void;
   setCourseSubjects: (courseSubjects: CourseSubject[]) => void;
   setMomentTypes: (momentTypes: MomentType[]) => void;
-  setActivities: (activities: Activity[]) => void;
+  setActivitiesByMoment: (activitiesByMoment: ActivitiesByMoment) => void;
+  setActivityRecommendations: (recommendations: ActivityRecommendation | null) => void;
   setFonts: (fonts: Font[]) => void;
   updateWizardData: (data: Partial<WizardData>) => void;
   resetWizardData: () => void;
@@ -110,6 +116,8 @@ interface AppState {
   clearTeacherChatHistory: () => void;
   getUserRole: () => UserRole;
   getUserArea: () => Area | undefined;
+  setResources: (resources: Resource[]) => void;
+  setCurrentResource: (resource: Resource | null) => void;
 }
 
 export const useStore = create<AppState>((set, get) => ({
@@ -124,7 +132,8 @@ export const useStore = create<AppState>((set, get) => ({
   documents: [],
   courseSubjects: [],
   momentTypes: [],
-  activities: [],
+  activitiesByMoment: { apertura: [], desarrollo: [], cierre: [] },
+  activityRecommendations: null,
   fonts: [],
   wizardData: {
     step: 1,
@@ -167,6 +176,8 @@ export const useStore = create<AppState>((set, get) => ({
   },
   currentLessonPlan: null,
   teacherChatHistory: [],
+  resources: [],
+  currentResource: null,
 
   setUsers: (users) => set({ users }),
   setCurrentUser: (currentUser) => set({ currentUser }),
@@ -179,7 +190,8 @@ export const useStore = create<AppState>((set, get) => ({
   setDocuments: (documents) => set({ documents }),
   setCourseSubjects: (courseSubjects) => set({ courseSubjects }),
   setMomentTypes: (momentTypes) => set({ momentTypes }),
-  setActivities: (activities) => set({ activities }),
+  setActivitiesByMoment: (activitiesByMoment) => set({ activitiesByMoment }),
+  setActivityRecommendations: (activityRecommendations) => set({ activityRecommendations }),
   setFonts: (fonts) => set({ fonts }),
 
   updateWizardData: (data) =>
@@ -278,4 +290,7 @@ export const useStore = create<AppState>((set, get) => ({
     if (!currentUser) return undefined;
     return areas.find((a) => a.coordinator_id === currentUser.id);
   },
+
+  setResources: (resources) => set({ resources }),
+  setCurrentResource: (currentResource) => set({ currentResource }),
 }));

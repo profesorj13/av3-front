@@ -138,13 +138,19 @@ export interface Activity {
   id: number;
   name: string;
   description?: string;
-  moment_type?: string;
+  moment_type: 'apertura' | 'desarrollo' | 'cierre';
 }
 
-export interface ActivitiesByMomentResponse {
+export interface ActivitiesByMoment {
   apertura: Activity[];
   desarrollo: Activity[];
   cierre: Activity[];
+}
+
+export interface ActivityRecommendation {
+  apertura_recommended_id: number;
+  desarrollo_recommended_ids: number[];
+  cierre_recommended_id: number;
 }
 
 export interface LessonPlanMoments {
@@ -228,3 +234,14 @@ export interface SharedClassNumbersResponse {
 }
 
 export type UserRole = 'coordinator' | 'teacher' | null;
+
+export interface Resource {
+  id: number;
+  title: string;
+  resource_type: 'lecture_guide' | 'course_sheet';
+  content: string | null;
+  user_id: number;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
