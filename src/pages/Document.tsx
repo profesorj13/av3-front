@@ -130,44 +130,59 @@ export function Document() {
     setVisibleClasses(new Set());
 
     try {
-      // Step 1: Generate strategy, problem_edge, eval_criteria (3 parallel calls)
-      await api.chat.sendMessage(`/coordination-documents/${docId}/generate`, {
+      // Step 1: Generate strategy, problem_edge, eval_criteria
+      await api.documents.generate(docId, {
         generate_strategy: true,
         generate_class_plans: false,
       });
 
       // Reload document to show the generated content immediately
       const docWithStrategy = await api.documents.getById(docId);
-      setCurrentDocument(docWithStrategy as CoordinationDocument);
+      setCurrentDocument(docWithStrategy);
       setIsGenerating(false);
 
       // Step 2: Generate class plans (show loader in classes section)
       setIsGeneratingClasses(true);
-      await api.chat.sendMessage(`/coordination-documents/${docId}/generate`, {
+      await api.documents.generate(docId, {
         generate_strategy: false,
         generate_class_plans: true,
       });
 
       // Reload document with class plans
       const finalDoc = await api.documents.getById(docId);
-      setCurrentDocument(finalDoc as CoordinationDocument);
+      setCurrentDocument(finalDoc);
 
-      // Animate classes appearing one by one
-      const subjectsData = (finalDoc as CoordinationDocument).subjects_data || {};
-      const allClassKeys: string[] = [];
-      Object.entries(subjectsData).forEach(([subjectId, data]: [string, any]) => {
-        (data.class_plan || []).forEach((c: any) => {
-          allClassKeys.push(`${c.class_number}-${subjectId}`);
+      // Animate classes appearing one by one - build list in same order as render
+      const finalSubjectsData = finalDoc.subjects_data || {};
+      const finalSubjects = finalDoc.subjects || [];
+      const allClassesForAnimation: { class_number: number; subject_id: number; subject_name: string }[] = [];
+
+      finalSubjects.forEach((s: any) => {
+        const sData = finalSubjectsData[s.id] || {};
+        const classPlan = sData.class_plan || [];
+        classPlan.forEach((c: any) => {
+          allClassesForAnimation.push({
+            class_number: c.class_number,
+            subject_id: s.id,
+            subject_name: s.name,
+          });
         });
       });
 
-      // Stagger the appearance of each class
-      allClassKeys.forEach((key, index) => {
-        setTimeout(() => {
-          setVisibleClasses(prev => new Set([...prev, key]));
-        }, index * 150); // 150ms delay between each class
+      // Sort in same order as render: by class_number, then by subject_name
+      allClassesForAnimation.sort((a, b) => {
+        if (a.class_number !== b.class_number) {
+          return a.class_number - b.class_number;
+        }
+        return a.subject_name.localeCompare(b.subject_name);
       });
 
+      // Stagger the appearance of each class
+      allClassesForAnimation.forEach((c, index) => {
+        setTimeout(() => {
+          setVisibleClasses((prev) => new Set([...prev, `${c.class_number}-${c.subject_id}`]));
+        }, index * 150); // 150ms delay between each class
+      });
     } catch (error) {
       console.error('Error generating content:', error);
       alert('Error al generar contenido con IA');
@@ -714,8 +729,8 @@ export function Document() {
                   <p className="body-2-regular text-[#47566C]">Generando clases con IA...</p>
                 </div>
               ) : (
-                <>
-                {(() => {
+              <>
+              {(() => {
                 // Collect all classes from all subjects separately
                 const allClasses: any[] = [];
                 const subjectColors: Record<number, string> = {};
@@ -811,9 +826,7 @@ export function Document() {
                     </h4>
                     {!collapsedWeeks.has(weekLabel) && (
                       <div className="space-y-2">
-                        {classes.map((c: any, idx: number) => {
-                        const classKey = `${c.class_number}-${c.subject_id}`;
-                        const isVisible = visibleClasses.size === 0 || visibleClasses.has(classKey);
+                        {classes.map((c, idx: number) => {
                         const getObjective = () => {
                           const sData = currentDocument.subjects_data || {};
                           const subjectData = sData[c.subject_id] || { class_plan: [] };
@@ -822,13 +835,14 @@ export function Document() {
                           return classItem?.objective || '...';
                         };
 
+                        const classKey = `${c.class_number}-${c.subject_id}`;
+                        const isVisible = visibleClasses.size === 0 || visibleClasses.has(classKey);
+
                         return (
                           <div
                             key={`${c.class_number}-${c.subject_id}-${idx}`}
                             className={`bg-[#F3F0FF] rounded-2xl p-4 transition-all duration-500 ease-out ${
-                              isVisible
-                                ? 'opacity-100 translate-y-0'
-                                : 'opacity-0 translate-y-4'
+                              isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
                             }`}
                           >
                             {/* Title */}
@@ -961,7 +975,7 @@ export function Document() {
               {subjects.length === 0 && (
                 <p className="body-2-regular text-[#47566C] text-center">No hay materias configuradas</p>
               )}
-                </>
+              </>
               )}
             </div>
           </div>
