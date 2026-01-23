@@ -42,9 +42,9 @@ export function Document() {
   const [editingStrategyType, setEditingStrategyType] = useState(false);
 
   const STRATEGY_TYPE_OPTIONS: { value: StrategyType; label: string }[] = [
-    { value: 'Proyecto', label: 'Proyecto' },
-    { value: 'Taller/laboratorio', label: 'Taller/laboratorio' },
-    { value: 'Ateneo/Debate', label: 'Ateneo/Debate' },
+    { value: 'proyecto', label: 'Proyecto' },
+    { value: 'taller_laboratorio', label: 'Taller/laboratorio' },
+    { value: 'ateneo_debate', label: 'Ateneo/Debate' },
   ];
 
   useEffect(() => {
@@ -206,7 +206,7 @@ export function Document() {
         const currentStrategies = currentDocument.methodological_strategies;
         updateData = {
           methodological_strategies: {
-            type: currentStrategies?.type || 'Proyecto',
+            type: currentStrategies?.type || 'proyecto',
             context: updatedContent,
           },
         };
@@ -256,10 +256,10 @@ export function Document() {
         <h1 className="title-2-bold text-[#10182B]">Itinerario del área</h1>
         <div className="flex items-center gap-3">
           <Button
-            onClick={currentDocument.status !== 'published' ? handlePublishDocument : undefined}
-            disabled={currentDocument.status === 'published'}
+            onClick={currentDocument.status !== 'published' && !isGenerating ? handlePublishDocument : undefined}
+            disabled={currentDocument.status === 'published' || isGenerating}
             className={`flex items-center gap-2 text-primary bg-muted border-none rounded-xl ${
-              currentDocument.status === 'published'
+              currentDocument.status === 'published' || isGenerating
                 ? 'cursor-not-allowed opacity-50'
                 : 'cursor-pointer hover:bg-muted hover:text-primary'
             }`}
@@ -431,7 +431,7 @@ export function Document() {
                         <div className="w-1 h-5 bg-primary rounded-full" />
                         {editingStrategyType && !isReadOnly ? (
                           <select
-                            value={currentDocument.methodological_strategies?.type || 'Proyecto'}
+                            value={currentDocument.methodological_strategies?.type || 'proyecto'}
                             onChange={async (e) => {
                               const newType = e.target.value as StrategyType;
                               try {
@@ -465,7 +465,7 @@ export function Document() {
                             onClick={!isReadOnly ? () => setEditingStrategyType(true) : undefined}
                             title={!isReadOnly ? 'Clic para editar' : ''}
                           >
-                            {currentDocument.methodological_strategies?.type || 'Proyecto'}
+                            {STRATEGY_TYPE_OPTIONS.find((o) => o.value === currentDocument.methodological_strategies?.type)?.label || 'Proyecto'}
                           </span>
                         )}
                       </div>

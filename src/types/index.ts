@@ -57,8 +57,8 @@ export interface Category {
   created_at?: string;
 }
 
-// Tipos de estrategia metodológica
-export type StrategyType = 'Proyecto' | 'Taller/laboratorio' | 'Ateneo/Debate';
+// Tipos de estrategia metodológica (valores del backend)
+export type StrategyType = 'proyecto' | 'taller_laboratorio' | 'ateneo_debate';
 
 export interface MethodologicalStrategies {
   type: StrategyType;

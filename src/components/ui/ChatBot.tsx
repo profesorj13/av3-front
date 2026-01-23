@@ -145,8 +145,18 @@ export function ChatBot({
                   </div>
                 </div>
                 <div className="max-w-[85%] rounded-2xl p-3 bg-muted text-[#10182B]">
-                  <h4 className="body-1-medium text-[#10182B] mb-2">{welcomeMessage.title}</h4>
-                  <p className="body-2-regular text-[#10182B]">{welcomeMessage.content}</p>
+                  {isGenerating ? (
+                    <div className="flex items-center gap-1">
+                      <span className="w-2 h-2 bg-[#735FE3] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <span className="w-2 h-2 bg-[#735FE3] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <span className="w-2 h-2 bg-[#735FE3] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                    </div>
+                  ) : (
+                    <>
+                      <h4 className="body-1-medium text-[#10182B] mb-2">{welcomeMessage.title}</h4>
+                      <p className="body-2-regular text-[#10182B]">{welcomeMessage.content}</p>
+                    </>
+                  )}
                 </div>
               </div>
             )}
