@@ -388,6 +388,22 @@
   letter-spacing: 0;
 }
 
+/* Header title: 18px, medium, 100% line-height */
+@utility header-title {
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-18);
+  line-height: 100%;
+  letter-spacing: 0;
+}
+
+/* Schedule title: 16px, bold, 100% line-height */
+@utility schedule-title {
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-16);
+  line-height: 100%;
+  letter-spacing: 0;
+}
+
 /* font-size: 11px */
 @utility subheadline-semi-bold {
   font-weight: var(--font-weight-semi-bold);

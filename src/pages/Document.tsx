@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, X, Calendar, Loader2, Share } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, Calendar, Loader2, Share, CloudCheck } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { Button } from '@/components/ui/button';
 import { ChatBot } from '@/components/ui/ChatBot';
@@ -250,10 +250,15 @@ export function Document() {
       <div className="flex items-center justify-between px-6 py-4 border-b border-muted bg-[#FFFFFF26] backdrop-blur-sm">
         <div className="flex items-center gap-4">
           <button onClick={() => navigate('/')} className="cursor-pointer hover:opacity-70">
-            <ChevronLeft className="w-6 h-6 text-[#10182B]" />
+            <ChevronLeft className="w-6 h-6 text-[#324155]" />
           </button>
         </div>
-        <h1 className="title-2-bold text-[#10182B]">Itinerario del área</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="header-title text-[#10182B]">
+            Itinerario del Área de {currentDocument.area?.name || 'Área'}
+          </h1>
+          <CloudCheck className="w-5 h-5 text-[#324155]" />
+        </div>
         <div className="flex items-center gap-3">
           <Button
             onClick={currentDocument.status !== 'published' && !isGenerating ? handlePublishDocument : undefined}
@@ -268,7 +273,7 @@ export function Document() {
             {currentDocument.status === 'published' ? 'Publicado' : 'Compartir'}
           </Button>
           <button onClick={() => navigate('/')} className="cursor-pointer hover:opacity-70">
-            <X className="w-6 h-6 text-[#10182B]" />
+            <X className="w-6 h-6 text-[#324155]" />
           </button>
         </div>
       </div>
@@ -465,7 +470,9 @@ export function Document() {
                             onClick={!isReadOnly ? () => setEditingStrategyType(true) : undefined}
                             title={!isReadOnly ? 'Clic para editar' : ''}
                           >
-                            {STRATEGY_TYPE_OPTIONS.find((o) => o.value === currentDocument.methodological_strategies?.type)?.label || 'Proyecto'}
+                            {STRATEGY_TYPE_OPTIONS.find(
+                              (o) => o.value === currentDocument.methodological_strategies?.type,
+                            )?.label || 'Proyecto'}
                           </span>
                         )}
                       </div>
@@ -513,7 +520,11 @@ export function Document() {
                           className={`section-description text-[#324155] leading-relaxed whitespace-pre-wrap ${!isReadOnly ? 'cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors' : 'p-2'}`}
                           onClick={
                             !isReadOnly
-                              ? () => handleContentEdit('strategy', currentDocument.methodological_strategies?.context || '')
+                              ? () =>
+                                  handleContentEdit(
+                                    'strategy',
+                                    currentDocument.methodological_strategies?.context || '',
+                                  )
                               : undefined
                           }
                           title={!isReadOnly ? 'Clic para editar' : ''}
@@ -614,9 +625,9 @@ export function Document() {
 
             {/* Class Schedule Section - Fixed at bottom */}
             {hasContent && !isGenerating && (
-              <div className="border-t border-muted p-6 bg-[#FFFFFF26] backdrop-blur-sm">
+              <div className="p-6 bg-[#FFFFFF26] backdrop-blur-sm shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
                 <div className="flex items-center justify-between">
-                  <h3 className="headline-1-bold text-[#10182B]">Cronograma de clases por disciplinas</h3>
+                  <h3 className="schedule-title text-[#324155]">Cronograma de clases por disciplinas</h3>
                   <Button
                     onClick={() => setIsClassesCollapsed(false)}
                     className="flex items-center gap-2 text-primary bg-transparent border-none cursor-pointer rounded-xl hover:bg-muted hover:text-primary"
@@ -640,7 +651,7 @@ export function Document() {
                 className="cursor-pointer hover:opacity-70"
                 title="Cerrar clases"
               >
-                <X className="w-5 h-5 text-[#10182B]" />
+                <X className="w-5 h-5 text-[#324155]" />
               </button>
             </div>
 
@@ -838,7 +849,7 @@ export function Document() {
                               </div>
                             ) : (
                               <p
-                                className={`mb-3 leading-tight ${!isReadOnly ? 'cursor-pointer hover:opacity-70' : ''}`}
+                                className={`mb-3 leading-none ${!isReadOnly ? 'cursor-pointer hover:opacity-70' : ''}`}
                                 onClick={
                                   !isReadOnly
                                     ? () =>
