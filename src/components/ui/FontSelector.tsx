@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Check, FileText } from 'lucide-react';
 import type { Font } from '@/types';
 import { cn } from '@/lib/utils';
@@ -7,6 +8,23 @@ interface FontSelectorProps {
   selectedFontId: number | null;
   onSelect: (fontId: number | null) => void;
   label?: string;
+}
+
+function FontThumbnail({ font }: { font: Font }) {
+  const [hasError, setHasError] = useState(false);
+
+  if (!font.thumbnail_url || hasError) {
+    return <FileText className="w-5 h-5 text-[#324155]" />;
+  }
+
+  return (
+    <img
+      src={font.thumbnail_url}
+      alt={font.name}
+      className="w-full h-full object-cover rounded-lg"
+      onError={() => setHasError(true)}
+    />
+  );
 }
 
 export function FontSelector({ fonts, selectedFontId, onSelect, label }: FontSelectorProps) {
@@ -42,16 +60,8 @@ export function FontSelector({ fonts, selectedFontId, onSelect, label }: FontSel
                 : 'border-gray-200 hover:border-gray-300 bg-white'
             )}
           >
-            <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
-              {font.thumbnail_url ? (
-                <img
-                  src={font.thumbnail_url}
-                  alt={font.name}
-                  className="w-full h-full object-cover rounded-lg"
-                />
-              ) : (
-                <FileText className="w-5 h-5 text-gray-500" />
-              )}
+            <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0 overflow-hidden">
+              <FontThumbnail font={font} />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-[#10182B] truncate">{font.name}</p>
