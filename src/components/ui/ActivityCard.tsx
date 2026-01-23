@@ -13,10 +13,10 @@ interface ActivityCardProps {
 export function ActivityCard({ title, subtitle, description, badgeText = 'Activo', onClick }: ActivityCardProps) {
   return (
     <div
-      className="cursor-pointer activity-card-shadow transition-all fill-primary border-[#E4E8EF] p-4 group rounded-3xl"
+      className="cursor-pointer activity-card-shadow transition-all fill-primary border-[#E4E8EF] p-4 group rounded-3xl h-full"
       onClick={onClick}
     >
-      <div className="flex flex-col h-full gap-4">
+      <div className="flex flex-col h-full gap-2">
         <div className="flex items-center justify-between">
           <span className="callout-regular text-foreground">{subtitle}</span>
           <Badge variant="secondary" className="bg-[#01CEAA4D] callout-regular text-foreground rounded-xl px-2 py-1">
@@ -28,7 +28,7 @@ export function ActivityCard({ title, subtitle, description, badgeText = 'Activo
 
         <p className="body-2-regular text-secondary-foreground">{description}</p>
 
-        <div className="mt-auto flex justify-end">
+        <div className="mt-auto pt-2 flex justify-end">
           <ArrowRight className="size-6 text-secondary-foreground group-hover:translate-x-1 transition-all" />
         </div>
       </div>
