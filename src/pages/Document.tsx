@@ -25,6 +25,8 @@ export function Document() {
   } = useStore();
 
   const [isChatGenerating, setIsChatGenerating] = useState(false);
+  const [isGeneratingClasses, setIsGeneratingClasses] = useState(false);
+  const [visibleClasses, setVisibleClasses] = useState<Set<string>>(new Set());
   const [editingContent, setEditingContent] = useState<{
     strategy?: string;
     title?: string;
@@ -105,17 +107,53 @@ export function Document() {
     if (!currentDocument) return;
 
     setIsGenerating(true);
-    try {
-      await api.chat.sendMessage(`/coordination-documents/${docId}/generate`, {});
+    setVisibleClasses(new Set());
 
-      // Reload the full document to get all generated content including class plans
-      const updatedDoc = await api.documents.getById(docId);
-      setCurrentDocument(updatedDoc as CoordinationDocument);
+    try {
+      // Step 1: Generate strategy, problem_edge, eval_criteria (3 parallel calls)
+      await api.chat.sendMessage(`/coordination-documents/${docId}/generate`, {
+        generate_strategy: true,
+        generate_class_plans: false,
+      });
+
+      // Reload document to show the generated content immediately
+      const docWithStrategy = await api.documents.getById(docId);
+      setCurrentDocument(docWithStrategy as CoordinationDocument);
+      setIsGenerating(false);
+
+      // Step 2: Generate class plans (show loader in classes section)
+      setIsGeneratingClasses(true);
+      await api.chat.sendMessage(`/coordination-documents/${docId}/generate`, {
+        generate_strategy: false,
+        generate_class_plans: true,
+      });
+
+      // Reload document with class plans
+      const finalDoc = await api.documents.getById(docId);
+      setCurrentDocument(finalDoc as CoordinationDocument);
+
+      // Animate classes appearing one by one
+      const subjectsData = (finalDoc as any).subjects_data || {};
+      const allClassKeys: string[] = [];
+      Object.entries(subjectsData).forEach(([subjectId, data]: [string, any]) => {
+        (data.class_plan || []).forEach((c: any) => {
+          allClassKeys.push(`${c.class_number}-${subjectId}`);
+        });
+      });
+
+      // Stagger the appearance of each class
+      allClassKeys.forEach((key, index) => {
+        setTimeout(() => {
+          setVisibleClasses(prev => new Set([...prev, key]));
+        }, index * 150); // 150ms delay between each class
+      });
+
     } catch (error) {
       console.error('Error generating content:', error);
       alert('Error al generar contenido con IA');
     } finally {
       setIsGenerating(false);
+      setIsGeneratingClasses(false);
     }
   };
 
@@ -232,18 +270,6 @@ export function Document() {
 
   const subjectsData = (currentDocument as any).subjects_data || {};
   const subjects = (currentDocument as any).subjects || [];
-
-  const documentCategoryIds = (currentDocument as any).category_ids || [];
-  const assignedCategoryIds = new Set<number>();
-  Object.values(subjectsData).forEach((sData: any) => {
-    (sData.class_plan || []).forEach((c: any) => {
-      (c.category_ids || []).forEach((catId: number) => assignedCategoryIds.add(catId));
-    });
-  });
-
-  const unassignedCategories = documentCategoryIds
-    .filter((catId: number) => !assignedCategoryIds.has(catId))
-    .map((catId: number) => ({ id: catId, name: categoryMap[catId] || `Categoría ${catId}` }));
 
   const hasContent = (currentDocument as any).methodological_strategies; /* &&
     (currentDocument as any).methodological_strategies.trim().length > 0; */
@@ -643,7 +669,14 @@ export function Document() {
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 space-y-6">
-              {(() => {
+              {isGeneratingClasses ? (
+                <div className="flex flex-col items-center justify-center py-12">
+                  <Loader2 className="w-8 h-8 animate-spin text-primary mb-2" />
+                  <p className="body-2-regular text-[#47566C]">Generando clases con IA...</p>
+                </div>
+              ) : (
+                <>
+                {(() => {
                 // Collect all classes from all subjects separately
                 const allClasses: any[] = [];
                 const subjectColors: Record<number, string> = {};
@@ -730,10 +763,17 @@ export function Document() {
                   <div key={weekLabel} className="space-y-3">
                     <h4 className="body-2-medium text-[#47566C] text-sm">{weekLabel}</h4>
                     <div className="space-y-2">
-                      {classes.map((c: any, idx: number) => (
+                      {classes.map((c: any, idx: number) => {
+                        const classKey = `${c.class_number}-${c.subject_id}`;
+                        const isVisible = visibleClasses.size === 0 || visibleClasses.has(classKey);
+                        return (
                         <div
                           key={`${c.class_number}-${c.subject_id}-${idx}`}
-                          className="fill-primary rounded-xl p-3 space-y-2"
+                          className={`fill-primary rounded-xl p-3 space-y-2 transition-all duration-500 ease-out ${
+                            isVisible
+                              ? 'opacity-100 translate-y-0'
+                              : 'opacity-0 translate-y-4'
+                          }`}
                         >
                           {editingClassTitle &&
                           editingClassTitle.subjectId === c.subject_id &&
@@ -859,7 +899,8 @@ export function Document() {
                             <span className="body-2-regular text-[#47566C] text-xs">{c.subject_name}</span>
                           </div>
                         </div>
-                      ))}
+                      );
+                      })}
                     </div>
                   </div>
                 ));
@@ -868,13 +909,7 @@ export function Document() {
               {subjects.length === 0 && (
                 <p className="body-2-regular text-[#47566C] text-center">No hay materias configuradas</p>
               )}
-
-              {/* Loading state for unassigned categories */}
-              {unassignedCategories.length > 0 && (
-                <div className="flex flex-col items-center justify-center py-12">
-                  <Loader2 className="w-8 h-8 animate-spin text-primary mb-2" />
-                  <p className="body-2-regular text-[#47566C]">Generando clases con IA...</p>
-                </div>
+                </>
               )}
             </div>
           </div>
