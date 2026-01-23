@@ -40,6 +40,19 @@ export function Document() {
     value: string;
   } | null>(null);
   const [editingStrategyType, setEditingStrategyType] = useState(false);
+  const [collapsedWeeks, setCollapsedWeeks] = useState<Set<string>>(new Set());
+
+  const toggleWeekCollapse = (weekLabel: string) => {
+    setCollapsedWeeks((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(weekLabel)) {
+        newSet.delete(weekLabel);
+      } else {
+        newSet.add(weekLabel);
+      }
+      return newSet;
+    });
+  };
 
   const STRATEGY_TYPE_OPTIONS: { value: StrategyType; label: string }[] = [
     { value: 'proyecto', label: 'Proyecto' },
@@ -744,9 +757,15 @@ export function Document() {
                     key={weekLabel}
                     className={`space-y-3 ${weekIndex > 0 ? 'border-t border-[#DAD5F6] pt-6' : ''}`}
                   >
-                    <h4 className="body-2-medium text-[#47566C] text-sm">{weekLabel}</h4>
-                    <div className="space-y-2">
-                      {classes.map((c, idx: number) => {
+                    <h4
+                      className="body-2-medium text-[#47566C] text-sm cursor-pointer hover:opacity-70 select-none"
+                      onClick={() => toggleWeekCollapse(weekLabel)}
+                    >
+                      {weekLabel}
+                    </h4>
+                    {!collapsedWeeks.has(weekLabel) && (
+                      <div className="space-y-2">
+                        {classes.map((c, idx: number) => {
                         const getObjective = () => {
                           const sData = currentDocument.subjects_data || {};
                           const subjectData = sData[c.subject_id] || { class_plan: [] };
@@ -881,7 +900,8 @@ export function Document() {
                           </div>
                         );
                       })}
-                    </div>
+                      </div>
+                    )}
                   </div>
                 ));
               })()}
