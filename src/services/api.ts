@@ -1,3 +1,25 @@
+import type {
+  ActivitiesByMoment,
+  Area,
+  Category,
+  ChatRequest,
+  ChatResponse,
+  CoordinationDocument,
+  CoordinationDocumentCreate,
+  CoordinationDocumentUpdate,
+  CoordinationStatusResponse,
+  Course,
+  CourseSubject,
+  Font,
+  LessonPlan,
+  LessonPlanCreate,
+  MomentType,
+  ProblematicNucleus,
+  SharedClassNumbersResponse,
+  Subject,
+  User,
+} from '@/types';
+
 const API_BASE = 'http://localhost:8000';
 
 export async function fetchData<T>(endpoint: string): Promise<T> {
@@ -62,66 +84,73 @@ export async function deleteData<T>(endpoint: string): Promise<T> {
 
 export const api = {
   users: {
-    getAll: () => fetchData('/users'),
+    getAll: () => fetchData<User[]>('/users'),
   },
   courses: {
-    getAll: () => fetchData('/courses'),
-    getById: (id: number) => fetchData(`/courses/${id}`),
-    getStudents: (id: number) => fetchData(`/courses/${id}/students`),
+    getAll: () => fetchData<Course[]>('/courses'),
+    getById: (id: number) => fetchData<Course>(`/courses/${id}`),
+    getStudents: (id: number) => fetchData<User[]>(`/courses/${id}/students`),
   },
   areas: {
-    getAll: () => fetchData('/areas'),
+    getAll: () => fetchData<Area[]>('/areas'),
   },
   subjects: {
-    getAll: () => fetchData('/subjects'),
+    getAll: () => fetchData<Subject[]>('/subjects'),
   },
   nuclei: {
-    getAll: () => fetchData('/problematic-nuclei'),
+    getAll: () => fetchData<ProblematicNucleus[]>('/problematic-nuclei'),
   },
   knowledgeAreas: {
     getAll: () => fetchData('/knowledge-areas'),
   },
   categories: {
-    getAll: () => fetchData('/categories'),
+    getAll: () => fetchData<Category[]>('/categories'),
   },
   documents: {
-    getAll: () => fetchData('/coordination-documents'),
-    getById: (id: number) => fetchData(`/coordination-documents/${id}`),
-    create: (data: any) => postData('/coordination-documents', data),
-    update: (id: number, data: any) => patchData(`/coordination-documents/${id}`, data),
-    delete: (id: number) => deleteData(`/coordination-documents/${id}`),
-    publish: (id: number) => patchData(`/coordination-documents/${id}`, { status: 'published' }),
+    getAll: () => fetchData<CoordinationDocument[]>('/coordination-documents'),
+    getById: (id: number) => fetchData<CoordinationDocument>(`/coordination-documents/${id}`),
+    create: (data: CoordinationDocumentCreate) => postData<CoordinationDocument>('/coordination-documents', data),
+    update: (id: number, data: CoordinationDocumentUpdate) =>
+      patchData<CoordinationDocument>(`/coordination-documents/${id}`, data),
+    delete: (id: number) => deleteData<{ success: boolean }>(`/coordination-documents/${id}`),
+    publish: (id: number) => patchData<CoordinationDocument>(`/coordination-documents/${id}`, { status: 'published' }),
+    generate: (id: number, options?: { generate_strategy?: boolean; generate_class_plans?: boolean }) =>
+      postData<CoordinationDocument>(`/coordination-documents/${id}/generate`, options || {}),
   },
   courseSubjects: {
-    getAll: () => fetchData('/course-subjects'),
-    getById: (id: number) => fetchData(`/course-subjects/${id}`),
-    getCoordinationStatus: (id: number) => fetchData(`/course-subjects/${id}/coordination-status`),
+    getAll: () => fetchData<CourseSubject[]>('/course-subjects'),
+    getById: (id: number) => fetchData<CourseSubject>(`/course-subjects/${id}`),
+    getCoordinationStatus: (id: number) =>
+      fetchData<CoordinationStatusResponse>(`/course-subjects/${id}/coordination-status`),
+    getSharedClassNumbers: (id: number) =>
+      fetchData<SharedClassNumbersResponse>(`/course-subjects/${id}/shared-class-numbers`),
+    getLessonPlans: (id: number) => fetchData<LessonPlan[]>(`/course-subjects/${id}/lesson-plans`),
   },
   teachers: {
-    getCourses: (teacherId: number) => fetchData(`/teachers/${teacherId}/courses`),
+    getCourses: (teacherId: number) => fetchData<Course[]>(`/teachers/${teacherId}/courses`),
   },
   momentTypes: {
-    getAll: () => fetchData('/moment-types'),
+    getAll: () => fetchData<MomentType[]>('/moment-types'),
   },
   activities: {
-    getAll: () => fetchData('/activities'),
+    getAll: () => fetchData<ActivitiesByMoment>('/activities'),
     recommend: (objective: string, categoryIds: number[]) =>
       postData('/activities/recommend', { objective, category_ids: categoryIds }),
   },
   fonts: {
-    getAll: (areaId?: number) => fetchData(`/fonts${areaId ? `?area_id=${areaId}` : ''}`),
-    getById: (id: number) => fetchData(`/fonts/${id}`),
+    getAll: (areaId?: number) => fetchData<Font[]>(`/fonts${areaId ? `?area_id=${areaId}` : ''}`),
+    getById: (id: number) => fetchData<Font>(`/fonts/${id}`),
   },
   lessonPlans: {
-    getAll: () => fetchData('/lesson-plans'),
-    getById: (id: number) => fetchData(`/teacher-lesson-plans/${id}`),
-    getByCourseSubject: (csId: number) => fetchData(`/course-subjects/${csId}/lesson-plans`),
-    create: (data: any) => postData('/teacher-lesson-plans', data),
-    update: (id: number, data: any) => patchData(`/teacher-lesson-plans/${id}`, data),
-    delete: (id: number) => deleteData(`/teacher-lesson-plans/${id}`),
+    getAll: () => fetchData<LessonPlan[]>('/lesson-plans'),
+    getById: (id: number) => fetchData<LessonPlan>(`/teacher-lesson-plans/${id}`),
+    getByCourseSubject: (csId: number) => fetchData<LessonPlan[]>(`/course-subjects/${csId}/lesson-plans`),
+    create: (data: LessonPlanCreate) => postData<LessonPlan>('/teacher-lesson-plans', data),
+    update: (id: number, data: Partial<LessonPlan>) => patchData<LessonPlan>(`/teacher-lesson-plans/${id}`, data),
+    delete: (id: number) => deleteData<{ success: boolean }>(`/teacher-lesson-plans/${id}`),
   },
   chat: {
-    sendMessage: (endpoint: string, data: any) => postData(endpoint, data),
+    sendMessage: (endpoint: string, data: ChatRequest) => postData<ChatResponse>(endpoint, data),
   },
   resources: {
     getAll: (userId?: number) => fetchData(`/resources${userId ? `?user_id=${userId}` : ''}`),

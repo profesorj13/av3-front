@@ -76,7 +76,15 @@ export function TeacherCourseSubject() {
   };
 
   const handleStartPlanWizard = (topicId: number) => {
-    navigate(`/teacher/planificar/${csId}/${topicId}`);
+    // Find the class plan item to get title, objective and category_ids
+    const classPlanItem = coordStatus?.class_plan?.find((c: any) => c.class_number === topicId);
+    navigate(`/teacher/planificar/${csId}/${topicId}`, {
+      state: {
+        title: classPlanItem?.title || '',
+        objective: classPlanItem?.objective || '',
+        categoryIds: classPlanItem?.category_ids || [],
+      },
+    });
   };
 
   const handleEditDocument = (documentId: number) => {

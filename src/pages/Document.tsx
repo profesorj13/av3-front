@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, X, Calendar, Loader2, Share } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, Calendar, Loader2, Share, CloudCheck } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { Button } from '@/components/ui/button';
 import { ChatBot } from '@/components/ui/ChatBot';
 import { api } from '@/services/api';
-import type { CoordinationDocument, ChatMessage } from '@/types';
+import type { CoordinationDocument, ChatMessage, StrategyType } from '@/types';
 
 export function Document() {
   const { id } = useParams();
@@ -41,6 +41,26 @@ export function Document() {
     classNumber: number;
     value: string;
   } | null>(null);
+  const [editingStrategyType, setEditingStrategyType] = useState(false);
+  const [collapsedWeeks, setCollapsedWeeks] = useState<Set<string>>(new Set());
+
+  const toggleWeekCollapse = (weekLabel: string) => {
+    setCollapsedWeeks((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(weekLabel)) {
+        newSet.delete(weekLabel);
+      } else {
+        newSet.add(weekLabel);
+      }
+      return newSet;
+    });
+  };
+
+  const STRATEGY_TYPE_OPTIONS: { value: StrategyType; label: string }[] = [
+    { value: 'proyecto', label: 'Proyecto' },
+    { value: 'taller_laboratorio', label: 'Taller/laboratorio' },
+    { value: 'ateneo_debate', label: 'Ateneo/Debate' },
+  ];
 
   useEffect(() => {
     loadDocument();
@@ -82,14 +102,14 @@ export function Document() {
 
       const assistantMessage: ChatMessage = {
         role: 'assistant',
-        content: (chatResult as any).response,
+        content: chatResult.response,
       };
 
       addChatMessage(assistantMessage);
 
       // Update document with any changes (exactly like original frontend)
-      if ((chatResult as any).document) {
-        setCurrentDocument({ ...currentDocument, ...(chatResult as any).document });
+      if (chatResult.document) {
+        setCurrentDocument({ ...currentDocument, ...chatResult.document });
       }
     } catch (error) {
       console.error('Error sending chat message:', error);
@@ -133,7 +153,7 @@ export function Document() {
       setCurrentDocument(finalDoc as CoordinationDocument);
 
       // Animate classes appearing one by one
-      const subjectsData = (finalDoc as any).subjects_data || {};
+      const subjectsData = (finalDoc as CoordinationDocument).subjects_data || {};
       const allClassKeys: string[] = [];
       Object.entries(subjectsData).forEach(([subjectId, data]: [string, any]) => {
         (data.class_plan || []).forEach((c: any) => {
@@ -158,20 +178,21 @@ export function Document() {
   };
 
   const handleSaveClassTitle = async (subjectId: number, classNumber: number, newTitle: string) => {
-    if (!currentDocument) return;
+    if (!currentDocument || !currentDocument.subjects_data) return;
 
-    const subjectsData = JSON.parse(JSON.stringify((currentDocument as any).subjects_data));
-    if (subjectsData[subjectId] && subjectsData[subjectId].class_plan) {
-      const classItem = subjectsData[subjectId].class_plan.find((c: any) => c.class_number === classNumber);
+    const subjectsDataCopy = JSON.parse(JSON.stringify(currentDocument.subjects_data));
+    if (subjectsDataCopy[subjectId]?.class_plan) {
+      const classItem = subjectsDataCopy[subjectId].class_plan.find(
+        (c: { class_number: number }) => c.class_number === classNumber,
+      );
       if (classItem && classItem.title !== newTitle) {
         classItem.title = newTitle;
         try {
-          await api.documents.update(docId, { subjects_data: subjectsData });
-          // Update local state directly (like original frontend)
+          await api.documents.update(docId, { subjects_data: subjectsDataCopy });
           setCurrentDocument({
             ...currentDocument,
-            subjects_data: subjectsData,
-          } as any);
+            subjects_data: subjectsDataCopy,
+          });
         } catch (error) {
           console.error('Error saving class title:', error);
         }
@@ -180,20 +201,21 @@ export function Document() {
   };
 
   const handleSaveLearningObjective = async (subjectId: number, classNumber: number, newObjective: string) => {
-    if (!currentDocument) return;
+    if (!currentDocument || !currentDocument.subjects_data) return;
 
-    const subjectsData = JSON.parse(JSON.stringify((currentDocument as any).subjects_data));
-    if (subjectsData[subjectId] && subjectsData[subjectId].class_plan) {
-      const classItem = subjectsData[subjectId].class_plan.find((c: any) => c.class_number === classNumber);
+    const subjectsDataCopy = JSON.parse(JSON.stringify(currentDocument.subjects_data));
+    if (subjectsDataCopy[subjectId]?.class_plan) {
+      const classItem = subjectsDataCopy[subjectId].class_plan.find(
+        (c: { class_number: number }) => c.class_number === classNumber,
+      );
       if (classItem && classItem.objective !== newObjective) {
         classItem.objective = newObjective;
         try {
-          await api.documents.update(docId, { subjects_data: subjectsData });
-          // Update local state directly (like original frontend)
+          await api.documents.update(docId, { subjects_data: subjectsDataCopy });
           setCurrentDocument({
             ...currentDocument,
-            subjects_data: subjectsData,
-          } as any);
+            subjects_data: subjectsDataCopy,
+          });
         } catch (error) {
           console.error('Error saving learning objective:', error);
         }
@@ -232,7 +254,14 @@ export function Document() {
       if (field === 'title') {
         updateData = { name: updatedContent };
       } else if (field === 'strategy') {
-        updateData = { methodological_strategies: updatedContent };
+        // Mantener el type existente y actualizar solo el context
+        const currentStrategies = currentDocument.methodological_strategies;
+        updateData = {
+          methodological_strategies: {
+            type: currentStrategies?.type || 'proyecto',
+            context: updatedContent,
+          },
+        };
       } else if (field === 'problem_edge') {
         updateData = { problem_edge: updatedContent };
       } else if (field === 'eval_criteria') {
@@ -244,7 +273,7 @@ export function Document() {
       setCurrentDocument({
         ...currentDocument,
         ...updateData,
-      } as any);
+      });
 
       // Clear editing state for this field
       setEditingContent((prev) => {
@@ -263,33 +292,31 @@ export function Document() {
     return <div className="flex items-center justify-center h-screen">Cargando...</div>;
   }
 
-  const categoryMap: Record<number, string> = {};
-  ((currentDocument as any).categories || []).forEach((c: any) => {
-    categoryMap[c.id] = c.name;
-  });
-
-  const subjectsData = (currentDocument as any).subjects_data || {};
-  const subjects = (currentDocument as any).subjects || [];
-
-  const hasContent = (currentDocument as any).methodological_strategies; /* &&
-    (currentDocument as any).methodological_strategies.trim().length > 0; */
+  const subjectsData = currentDocument.subjects_data || {};
+  const subjects = currentDocument.subjects || [];
+  const hasContent = !!currentDocument.methodological_strategies;
 
   return (
     <div className="h-screen flex flex-col gradient-background">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-muted bg-[#FFFFFF26] backdrop-blur-sm">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-[#DAD5F6] bg-[#FFFFFF26] backdrop-blur-sm">
         <div className="flex items-center gap-4">
           <button onClick={() => navigate('/')} className="cursor-pointer hover:opacity-70">
-            <ChevronLeft className="w-6 h-6 text-[#10182B]" />
+            <ChevronLeft className="w-6 h-6 text-[#324155]" />
           </button>
         </div>
-        <h1 className="title-2-bold text-[#10182B]">Itinerario del área</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="header-title text-[#10182B]">
+            Itinerario del Área de {currentDocument.area?.name || 'Área'}
+          </h1>
+          <CloudCheck className="w-5 h-5 text-[#324155]" />
+        </div>
         <div className="flex items-center gap-3">
           <Button
-            onClick={currentDocument.status !== 'published' ? handlePublishDocument : undefined}
-            disabled={currentDocument.status === 'published'}
+            onClick={currentDocument.status !== 'published' && !isGenerating ? handlePublishDocument : undefined}
+            disabled={currentDocument.status === 'published' || isGenerating}
             className={`flex items-center gap-2 text-primary bg-muted border-none rounded-xl ${
-              currentDocument.status === 'published'
+              currentDocument.status === 'published' || isGenerating
                 ? 'cursor-not-allowed opacity-50'
                 : 'cursor-pointer hover:bg-muted hover:text-primary'
             }`}
@@ -298,7 +325,7 @@ export function Document() {
             {currentDocument.status === 'published' ? 'Publicado' : 'Compartir'}
           </Button>
           <button onClick={() => navigate('/')} className="cursor-pointer hover:opacity-70">
-            <X className="w-6 h-6 text-[#10182B]" />
+            <X className="w-6 h-6 text-[#324155]" />
           </button>
         </div>
       </div>
@@ -326,14 +353,14 @@ export function Document() {
         <div className="flex-1 flex flex-col activity-card-bg rounded-2xl overflow-hidden">
           {/* Document Title Header */}
           <div className="p-4 px-6 border-b border-muted flex flex-row items-center justify-between h-14">
-            <div className="flex-1">
+            <div className="flex-1 min-w-0 mr-4">
               {editingContent.title !== undefined ? (
                 <div className="flex items-center gap-2">
                   <input
                     type="text"
                     value={editingContent.title}
                     onChange={(e) => handleContentEdit('title', e.target.value)}
-                    className="headline-1-bold text-[#10182B] bg-transparent border-b-2 border-blue-500 focus:outline-none focus:border-blue-600 px-1 py-0"
+                    className="headline-1-bold text-[#10182B] bg-transparent border-b-2 border-blue-500 focus:outline-none focus:border-blue-600 px-1 py-0 max-w-md"
                     placeholder="Título del documento"
                   />
                   <button
@@ -356,23 +383,13 @@ export function Document() {
                   </button>
                 </div>
               ) : (
-                <div className="flex items-center gap-2">
-                  <h2
-                    className={`headline-1-bold text-[#10182B] ${!isReadOnly ? 'cursor-pointer hover:bg-gray-50 px-2 py-1 rounded transition-colors' : ''}`}
-                    onClick={!isReadOnly ? () => handleContentEdit('title', currentDocument.name) : undefined}
-                    title={!isReadOnly ? 'Clic para editar' : ''}
-                  >
-                    {currentDocument.name}
-                  </h2>
-                  {!isReadOnly && (
-                    <button
-                      onClick={() => handleContentEdit('title', currentDocument.name)}
-                      className="text-xs text-blue-600 hover:text-blue-800 cursor-pointer"
-                    >
-                      Editar
-                    </button>
-                  )}
-                </div>
+                <h2
+                  className={`headline-1-bold text-[#10182B] truncate ${!isReadOnly ? 'cursor-pointer hover:bg-[#F5F3FF] px-2 py-1 rounded transition-colors' : ''}`}
+                  onClick={!isReadOnly ? () => handleContentEdit('title', currentDocument.name) : undefined}
+                  title={!isReadOnly ? 'Clic para editar' : currentDocument.name}
+                >
+                  {currentDocument.name}
+                </h2>
               )}
             </div>
             <div className="flex items-center gap-2 text-[#47566C] text-sm">
@@ -397,110 +414,10 @@ export function Document() {
           <div className="flex-1 flex flex-col overflow-hidden">
             {/* Scrollable Content */}
             <div className="flex-1 overflow-y-auto p-6">
-              {/* Methodological Strategy Section */}
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="headline-1-bold text-[#10182B]">Estrategia metodológica</h3>
-                    {hasContent && (currentDocument as any).methodological_strategies?.type && (
-                      <p className="body-2-regular text-[#47566C] text-sm mt-1">
-                        {typeof (currentDocument as any).methodological_strategies.type === 'string'
-                          ? (currentDocument as any).methodological_strategies.type
-                          : (currentDocument as any).methodological_strategies.type?.type ||
-                            JSON.stringify((currentDocument as any).methodological_strategies.type)}
-                      </p>
-                    )}
-                  </div>
-                  {hasContent && !isGenerating && !isReadOnly && (
-                    <button
-                      onClick={() =>
-                        handleContentEdit('strategy', (currentDocument as any).methodological_strategies.context)
-                      }
-                      className="text-xs text-blue-600 hover:text-blue-800 cursor-pointer"
-                    >
-                      Editar
-                    </button>
-                  )}
-                </div>
-                {isGenerating ? (
-                  <div className="flex flex-col items-center justify-center py-12">
-                    <Loader2 className="w-8 h-8 animate-spin text-primary mb-2" />
-                    <p className="body-2-regular text-[#47566C]">Generando contenido con IA...</p>
-                  </div>
-                ) : (
-                  <div>
-                    {editingContent.strategy !== undefined && !isReadOnly ? (
-                      <div className="space-y-2">
-                        <textarea
-                          value={editingContent.strategy}
-                          onChange={(e) => handleContentEdit('strategy', e.target.value)}
-                          className="w-full p-3 border border-gray-300 rounded-lg body-2-regular text-secondary-foreground leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 whitespace-pre-wrap"
-                          rows={12}
-                          placeholder="Editá la estrategia metodológica..."
-                        />
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handleSaveContent('strategy')}
-                            className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 cursor-pointer"
-                          >
-                            Guardar
-                          </button>
-                          <button
-                            onClick={() => {
-                              setEditingContent((prev) => {
-                                const newState = { ...prev };
-                                delete newState.strategy;
-                                return newState;
-                              });
-                            }}
-                            className="px-3 py-1 bg-gray-300 text-gray-700 text-sm rounded hover:bg-gray-400 cursor-pointer"
-                          >
-                            Cancelar
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div
-                        className={`body-2-regular text-secondary-foreground whitespace-pre-wrap ${!isReadOnly ? 'cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors' : 'p-2'}`}
-                        onClick={
-                          !isReadOnly
-                            ? () => handleContentEdit('strategy', (currentDocument as any).methodological_strategies)
-                            : undefined
-                        }
-                        title={!isReadOnly ? 'Clic para editar' : ''}
-                      >
-                        {hasContent ? (
-                          typeof (currentDocument as any).methodological_strategies === 'string' ? (
-                            (currentDocument as any).methodological_strategies
-                          ) : (
-                            (currentDocument as any).methodological_strategies?.context ||
-                            (currentDocument as any).methodological_strategies?.type ||
-                            JSON.stringify((currentDocument as any).methodological_strategies)
-                          )
-                        ) : (
-                          <p className="text-[#47566C]/60 italic">Generando contenido con IA...</p>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Separator */}
-                <div className="border-t border-gray-200 my-6"></div>
-
                 {/* Eje Problemático Section */}
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="headline-1-bold text-[#10182B]">Eje problemático</h3>
-                    {hasContent && !isGenerating && !isReadOnly && (
-                      <button
-                        onClick={() => handleContentEdit('problem_edge', (currentDocument as any).problem_edge || '')}
-                        className="text-xs text-blue-600 hover:text-blue-800 cursor-pointer"
-                      >
-                        Editar
-                      </button>
-                    )}
-                  </div>
+                  <h3 className="section-title text-[#10182B]">Eje problemático</h3>
                   {isGenerating ? (
                     <div className="flex flex-col items-center justify-center py-12">
                       <Loader2 className="w-8 h-8 animate-spin text-primary mb-2" />
@@ -513,7 +430,7 @@ export function Document() {
                           <textarea
                             value={editingContent.problem_edge}
                             onChange={(e) => handleContentEdit('problem_edge', e.target.value)}
-                            className="w-full p-3 border border-gray-300 rounded-lg body-2-regular text-secondary-foreground leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 whitespace-pre-wrap"
+                            className="w-full p-3 border border-gray-300 rounded-lg section-description text-[#324155] leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 whitespace-pre-wrap"
                             rows={8}
                             placeholder="Editá el eje problemático..."
                           />
@@ -540,17 +457,16 @@ export function Document() {
                         </div>
                       ) : (
                         <div
-                          className={`body-2-regular text-secondary-foreground whitespace-pre-wrap ${!isReadOnly ? 'cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors' : 'p-2'}`}
+                          className={`section-description text-[#324155] leading-relaxed whitespace-pre-wrap ${!isReadOnly ? 'cursor-pointer hover:bg-[#F5F3FF] p-2 rounded transition-colors' : 'p-2'}`}
                           onClick={
                             !isReadOnly
-                              ? () => handleContentEdit('problem_edge', (currentDocument as any).problem_edge)
+                              ? () => handleContentEdit('problem_edge', currentDocument.problem_edge || '')
                               : undefined
                           }
                           title={!isReadOnly ? 'Clic para editar' : ''}
                         >
                           {hasContent ? (
-                            (currentDocument as any).problem_edge ||
-                            'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.'
+                            currentDocument.problem_edge || ''
                           ) : (
                             <p className="text-[#47566C]/60 italic">Generando contenido con IA...</p>
                           )}
@@ -561,21 +477,127 @@ export function Document() {
                 </div>
 
                 {/* Separator */}
-                <div className="border-t border-gray-200 my-6"></div>
+                <div className="border-t border-[#DAD5F6] my-6"></div>
+
+                {/* Estrategia Metodológica Section */}
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="section-title text-[#10182B]">Estrategia metodológica</h3>
+                    {hasContent && (
+                      <div className="flex items-center gap-2 mt-2">
+                        <div className="w-1 h-5 bg-[#10182B] rounded-full" />
+                        {editingStrategyType && !isReadOnly ? (
+                          <select
+                            value={currentDocument.methodological_strategies?.type || 'proyecto'}
+                            onChange={async (e) => {
+                              const newType = e.target.value as StrategyType;
+                              try {
+                                const updatedStrategies = {
+                                  type: newType,
+                                  context: currentDocument.methodological_strategies?.context || '',
+                                };
+                                await api.documents.update(docId, { methodological_strategies: updatedStrategies });
+                                setCurrentDocument({
+                                  ...currentDocument,
+                                  methodological_strategies: updatedStrategies,
+                                });
+                              } catch (error) {
+                                console.error('Error saving strategy type:', error);
+                              }
+                              setEditingStrategyType(false);
+                            }}
+                            onBlur={() => setEditingStrategyType(false)}
+                            className="font-semibold text-[#10182B] bg-transparent border-b-2 border-[#10182B] focus:outline-none cursor-pointer"
+                            autoFocus
+                          >
+                            {STRATEGY_TYPE_OPTIONS.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          <span
+                            className={`font-semibold text-[#10182B] ${!isReadOnly ? 'cursor-pointer hover:opacity-70' : ''}`}
+                            onClick={!isReadOnly ? () => setEditingStrategyType(true) : undefined}
+                            title={!isReadOnly ? 'Clic para editar' : ''}
+                          >
+                            {STRATEGY_TYPE_OPTIONS.find(
+                              (o) => o.value === currentDocument.methodological_strategies?.type,
+                            )?.label || 'Proyecto'}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  {isGenerating ? (
+                    <div className="flex flex-col items-center justify-center py-12">
+                      <Loader2 className="w-8 h-8 animate-spin text-primary mb-2" />
+                      <p className="body-2-regular text-[#47566C]">Generando contenido con IA...</p>
+                    </div>
+                  ) : (
+                    <div>
+                      {editingContent.strategy !== undefined && !isReadOnly ? (
+                        <div className="space-y-2">
+                          <textarea
+                            value={editingContent.strategy}
+                            onChange={(e) => handleContentEdit('strategy', e.target.value)}
+                            className="w-full p-3 border border-gray-300 rounded-lg section-description text-[#324155] leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 whitespace-pre-wrap"
+                            rows={12}
+                            placeholder="Editá la estrategia metodológica..."
+                          />
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleSaveContent('strategy')}
+                              className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 cursor-pointer"
+                            >
+                              Guardar
+                            </button>
+                            <button
+                              onClick={() => {
+                                setEditingContent((prev) => {
+                                  const newState = { ...prev };
+                                  delete newState.strategy;
+                                  return newState;
+                                });
+                              }}
+                              className="px-3 py-1 bg-gray-300 text-gray-700 text-sm rounded hover:bg-gray-400 cursor-pointer"
+                            >
+                              Cancelar
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div
+                          className={`section-description text-[#324155] leading-relaxed whitespace-pre-wrap ${!isReadOnly ? 'cursor-pointer hover:bg-[#F5F3FF] p-2 rounded transition-colors' : 'p-2'}`}
+                          onClick={
+                            !isReadOnly
+                              ? () =>
+                                  handleContentEdit(
+                                    'strategy',
+                                    currentDocument.methodological_strategies?.context || '',
+                                  )
+                              : undefined
+                          }
+                          title={!isReadOnly ? 'Clic para editar' : ''}
+                        >
+                          {hasContent ? (
+                            currentDocument.methodological_strategies?.context || ''
+                          ) : (
+                            <p className="text-[#47566C]/60 italic">Generando contenido con IA...</p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Separator */}
+                <div className="border-t border-[#DAD5F6] my-6"></div>
 
                 {/* Criterios de Evaluación Section */}
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="headline-1-bold text-[#10182B]">Criterios de evaluación</h3>
-                    {hasContent && !isGenerating && !isReadOnly && (
-                      <button
-                        onClick={() => handleContentEdit('eval_criteria', (currentDocument as any).eval_criteria || '')}
-                        className="text-xs text-blue-600 hover:text-blue-800 cursor-pointer"
-                      >
-                        Editar
-                      </button>
-                    )}
-                  </div>
+                  <h3 className="section-title text-[#10182B]">Criterios de evaluación</h3>
                   {isGenerating ? (
                     <div className="flex flex-col items-center justify-center py-12">
                       <Loader2 className="w-8 h-8 animate-spin text-primary mb-2" />
@@ -588,7 +610,7 @@ export function Document() {
                           <textarea
                             value={editingContent.eval_criteria}
                             onChange={(e) => handleContentEdit('eval_criteria', e.target.value)}
-                            className="w-full p-3 border border-gray-300 rounded-lg body-2-regular text-secondary-foreground leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 whitespace-pre-wrap"
+                            className="w-full p-3 border border-gray-300 rounded-lg section-description text-[#324155] leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 whitespace-pre-wrap"
                             rows={8}
                             placeholder="Editá los criterios de evaluación..."
                           />
@@ -615,16 +637,33 @@ export function Document() {
                         </div>
                       ) : (
                         <div
-                          className={`body-2-regular text-secondary-foreground whitespace-pre-wrap ${!isReadOnly ? 'cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors' : 'p-2'}`}
+                          className={`section-description text-[#324155] leading-relaxed ${!isReadOnly ? 'cursor-pointer hover:bg-[#F5F3FF] p-2 rounded transition-colors' : 'p-2'}`}
                           onClick={
                             !isReadOnly
-                              ? () => handleContentEdit('eval_criteria', (currentDocument as any).eval_criteria)
+                              ? () => handleContentEdit('eval_criteria', currentDocument.eval_criteria || '')
                               : undefined
                           }
                           title={!isReadOnly ? 'Clic para editar' : ''}
                         >
                           {hasContent ? (
-                            (currentDocument as any).eval_criteria
+                            <ul className="space-y-2">
+                              {(currentDocument.eval_criteria || '')
+                                .split(/\\n|\n/)
+                                .filter((line: string) => line.trim())
+                                .map((line: string, index: number) => {
+                                  const trimmedLine = line.trim();
+                                  const isBullet = trimmedLine.startsWith('-');
+                                  const content = isBullet ? trimmedLine.slice(1).trim() : trimmedLine;
+                                  return (
+                                    <li key={index} className="flex items-start gap-2">
+                                      {isBullet && (
+                                        <span className="w-1.5 h-1.5 rounded-full bg-[#324155] mt-2 shrink-0" />
+                                      )}
+                                      <span className={isBullet ? '' : 'ml-3.5'}>{content}</span>
+                                    </li>
+                                  );
+                                })}
+                            </ul>
                           ) : (
                             <p className="text-[#47566C]/60 italic">Generando contenido con IA...</p>
                           )}
@@ -638,12 +677,12 @@ export function Document() {
 
             {/* Class Schedule Section - Fixed at bottom */}
             {hasContent && !isGenerating && (
-              <div className="border-t border-muted p-6 bg-[#FFFFFF26] backdrop-blur-sm">
+              <div className="p-6 bg-[#FFFFFF26] backdrop-blur-sm shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
                 <div className="flex items-center justify-between">
-                  <h3 className="headline-1-bold text-[#10182B]">Cronograma de clases por disciplinas</h3>
+                  <h3 className="schedule-title text-[#324155]">Cronograma de clases por disciplinas</h3>
                   <Button
                     onClick={() => setIsClassesCollapsed(false)}
-                    className="flex items-center gap-2 text-primary bg-muted border-none cursor-pointer rounded-xl hover:bg-muted hover:text-primary"
+                    className="flex items-center gap-2 text-primary bg-transparent border-none cursor-pointer rounded-xl hover:bg-muted hover:text-primary"
                   >
                     Ver clases
                     <ChevronRight className="w-4 h-4" />
@@ -657,14 +696,14 @@ export function Document() {
         {/* Right Sidebar - Classes by Discipline */}
         {!isClassesCollapsed && (
           <div className="w-80 flex flex-col activity-card-bg rounded-2xl overflow-hidden">
-            <div className="p-4 border-b border-muted flex items-center justify-between h-14">
+            <div className="p-4 border-b border-[#DAD5F6] flex items-center justify-between h-14">
               <h3 className="headline-1-bold text-[#10182B]">Clases por disciplinas</h3>
               <button
                 onClick={() => setIsClassesCollapsed(true)}
                 className="cursor-pointer hover:opacity-70"
                 title="Cerrar clases"
               >
-                <X className="w-5 h-5 text-[#10182B]" />
+                <X className="w-5 h-5 text-[#324155]" />
               </button>
             </div>
 
@@ -759,77 +798,102 @@ export function Document() {
                   groupedByWeek[weekKey].push(c);
                 });
 
-                return Object.entries(groupedByWeek).map(([weekLabel, classes]) => (
-                  <div key={weekLabel} className="space-y-3">
-                    <h4 className="body-2-medium text-[#47566C] text-sm">{weekLabel}</h4>
-                    <div className="space-y-2">
-                      {classes.map((c: any, idx: number) => {
+                return Object.entries(groupedByWeek).map(([weekLabel, classes], weekIndex) => (
+                  <div
+                    key={weekLabel}
+                    className={`space-y-3 ${weekIndex > 0 ? 'border-t border-[#DAD5F6] pt-6' : ''}`}
+                  >
+                    <h4
+                      className="body-2-medium text-[#47566C] text-sm cursor-pointer hover:opacity-70 select-none"
+                      onClick={() => toggleWeekCollapse(weekLabel)}
+                    >
+                      {weekLabel}
+                    </h4>
+                    {!collapsedWeeks.has(weekLabel) && (
+                      <div className="space-y-2">
+                        {classes.map((c: any, idx: number) => {
                         const classKey = `${c.class_number}-${c.subject_id}`;
                         const isVisible = visibleClasses.size === 0 || visibleClasses.has(classKey);
+                        const getObjective = () => {
+                          const sData = currentDocument.subjects_data || {};
+                          const subjectData = sData[c.subject_id] || { class_plan: [] };
+                          const classPlan = subjectData.class_plan || [];
+                          const classItem = classPlan.find((item) => item.class_number === c.class_number);
+                          return classItem?.objective || '...';
+                        };
+
                         return (
-                        <div
-                          key={`${c.class_number}-${c.subject_id}-${idx}`}
-                          className={`fill-primary rounded-xl p-3 space-y-2 transition-all duration-500 ease-out ${
-                            isVisible
-                              ? 'opacity-100 translate-y-0'
-                              : 'opacity-0 translate-y-4'
-                          }`}
-                        >
-                          {editingClassTitle &&
-                          editingClassTitle.subjectId === c.subject_id &&
-                          editingClassTitle.classNumber === c.class_number ? (
-                            <input
-                              type="text"
-                              value={c.title || ''}
-                              onChange={(e) => {
-                                // Update local state immediately for better UX
-                                const subjectsData = JSON.parse(JSON.stringify((currentDocument as any).subjects_data));
-                                if (subjectsData[c.subject_id] && subjectsData[c.subject_id].class_plan) {
-                                  const classItem = subjectsData[c.subject_id].class_plan.find(
-                                    (item: any) => item.class_number === c.class_number,
-                                  );
-                                  if (classItem) {
-                                    classItem.title = e.target.value;
-                                    setCurrentDocument({
-                                      ...currentDocument,
-                                      subjects_data: subjectsData,
-                                    } as any);
+                          <div
+                            key={`${c.class_number}-${c.subject_id}-${idx}`}
+                            className={`bg-[#F3F0FF] rounded-2xl p-4 transition-all duration-500 ease-out ${
+                              isVisible
+                                ? 'opacity-100 translate-y-0'
+                                : 'opacity-0 translate-y-4'
+                            }`}
+                          >
+                            {/* Title */}
+                            {editingClassTitle &&
+                            editingClassTitle.subjectId === c.subject_id &&
+                            editingClassTitle.classNumber === c.class_number ? (
+                              <input
+                                type="text"
+                                value={c.title || ''}
+                                onChange={(e) => {
+                                  if (!currentDocument.subjects_data) return;
+                                  const sDataCopy = JSON.parse(JSON.stringify(currentDocument.subjects_data));
+                                  if (sDataCopy[c.subject_id]?.class_plan) {
+                                    const classItem = sDataCopy[c.subject_id].class_plan.find(
+                                      (item: { class_number: number }) => item.class_number === c.class_number,
+                                    );
+                                    if (classItem) {
+                                      classItem.title = e.target.value;
+                                      setCurrentDocument({
+                                        ...currentDocument,
+                                        subjects_data: sDataCopy,
+                                      });
+                                    }
                                   }
-                                }
-                              }}
-                              onBlur={() => {
-                                handleSaveClassTitle(c.subject_id, c.class_number, c.title || '');
-                                setEditingClassTitle(null);
-                              }}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
+                                }}
+                                onBlur={() => {
                                   handleSaveClassTitle(c.subject_id, c.class_number, c.title || '');
                                   setEditingClassTitle(null);
-                                } else if (e.key === 'Escape') {
-                                  setEditingClassTitle(null);
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    handleSaveClassTitle(c.subject_id, c.class_number, c.title || '');
+                                    setEditingClassTitle(null);
+                                  } else if (e.key === 'Escape') {
+                                    setEditingClassTitle(null);
+                                  }
+                                }}
+                                className="w-full text-[#10182B] font-semibold text-sm bg-transparent border-b-2 border-primary focus:outline-none mb-2"
+                                placeholder=""
+                                autoFocus
+                              />
+                            ) : (
+                              <p
+                                className={`text-[#10182B] font-semibold text-sm mb-2 ${!isReadOnly ? 'cursor-pointer hover:opacity-70' : ''}`}
+                                onClick={
+                                  !isReadOnly
+                                    ? () =>
+                                        setEditingClassTitle({
+                                          subjectId: c.subject_id,
+                                          classNumber: c.class_number,
+                                        })
+                                    : undefined
                                 }
-                              }}
-                              className="w-full body-2-medium text-[#10182B] text-sm bg-transparent border-b-2 border-blue-500 focus:outline-none focus:border-blue-600 px-1 py-0"
-                              placeholder=""
-                              autoFocus
-                            />
-                          ) : (
-                            <div
-                              className="w-full body-2-medium text-[#10182B] text-sm cursor-pointer hover:bg-gray-50 px-1 py-0 rounded transition-colors whitespace-pre-wrap"
-                              onClick={() =>
-                                setEditingClassTitle({ subjectId: c.subject_id, classNumber: c.class_number })
-                              }
-                              title="Clic para editar"
-                            >
-                              {c.title || 'Título clase'}
-                            </div>
-                          )}
-                          <div className="space-y-1">
-                            <div className="flex items-start gap-2">
-                              <span className="body-2-medium text-[#10182B] text-xs font-semibold">Objetivo:</span>
-                              {editingLearningObjective &&
-                              editingLearningObjective.subjectId === c.subject_id &&
-                              editingLearningObjective.classNumber === c.class_number ? (
+                                title={!isReadOnly ? 'Clic para editar' : ''}
+                              >
+                                {c.title || 'Título clase'}
+                              </p>
+                            )}
+
+                            {/* Objective */}
+                            {editingLearningObjective &&
+                            editingLearningObjective.subjectId === c.subject_id &&
+                            editingLearningObjective.classNumber === c.class_number ? (
+                              <div className="mb-3">
+                                <span className="callout-semi-bold text-[#324155]">Objetivo: </span>
                                 <textarea
                                   value={editingLearningObjective.value}
                                   onChange={(e) => {
@@ -851,57 +915,45 @@ export function Document() {
                                       setEditingLearningObjective(null);
                                     }
                                   }}
-                                  className="flex-1 body-2-regular text-[#47566C] text-xs bg-transparent border-b border-blue-500 focus:outline-none focus:border-blue-600 px-1 py-0 resize-none"
-                                  rows={2}
+                                  className="w-full callout-regular text-[#324155] bg-transparent border-b border-primary focus:outline-none resize-none mt-1"
+                                  rows={3}
                                   placeholder=""
                                   autoFocus
-                                  style={{ minHeight: 'auto' }}
                                 />
-                              ) : (
-                                <div
-                                  className="flex-1 body-2-regular text-[#47566C] text-xs cursor-pointer hover:bg-gray-50 px-1 py-0 rounded transition-colors whitespace-pre-wrap"
-                                  onClick={() =>
-                                    setEditingLearningObjective({
-                                      subjectId: c.subject_id,
-                                      classNumber: c.class_number,
-                                      value: (() => {
-                                        const subjectsData = (currentDocument as any).subjects_data || {};
-                                        const subjectData = subjectsData[c.subject_id] || {};
-                                        const classPlan = subjectData.class_plan || [];
-                                        const classItem = classPlan.find(
-                                          (item: any) => item.class_number === c.class_number,
-                                        );
-                                        return classItem?.objective || '';
-                                      })(),
-                                    })
-                                  }
-                                  title="Clic para editar"
-                                >
-                                  {/* Show the actual objectives value from the current document state */}
-                                  {(() => {
-                                    const subjectsData = (currentDocument as any).subjects_data || {};
-                                    const subjectData = subjectsData[c.subject_id] || {};
-                                    const classPlan = subjectData.class_plan || [];
-                                    const classItem = classPlan.find(
-                                      (item: any) => item.class_number === c.class_number,
-                                    );
-                                    return classItem?.objective || '...';
-                                  })()}
-                                </div>
-                              )}
+                              </div>
+                            ) : (
+                              <p
+                                className={`mb-3 leading-none ${!isReadOnly ? 'cursor-pointer hover:opacity-70' : ''}`}
+                                onClick={
+                                  !isReadOnly
+                                    ? () =>
+                                        setEditingLearningObjective({
+                                          subjectId: c.subject_id,
+                                          classNumber: c.class_number,
+                                          value: getObjective(),
+                                        })
+                                    : undefined
+                                }
+                                title={!isReadOnly ? 'Clic para editar' : ''}
+                              >
+                                <span className="callout-semi-bold text-[#324155]">Objetivo: </span>
+                                <span className="callout-regular text-[#324155]">{getObjective()}</span>
+                              </p>
+                            )}
+
+                            {/* Subject indicator */}
+                            <div className="flex items-center gap-2">
+                              <div
+                                className="w-2.5 h-2.5 rounded-full"
+                                style={{ backgroundColor: subjectColors[c.subject_id] }}
+                              />
+                              <span className="text-[#47566C] text-sm">{c.subject_name}</span>
                             </div>
                           </div>
-                          <div className="flex items-center gap-1.5 pt-1">
-                            <div
-                              className="w-2 h-2 rounded-full"
-                              style={{ backgroundColor: subjectColors[c.subject_id] }}
-                            />
-                            <span className="body-2-regular text-[#47566C] text-xs">{c.subject_name}</span>
-                          </div>
-                        </div>
-                      );
+                        );
                       })}
-                    </div>
+                      </div>
+                    )}
                   </div>
                 ));
               })()}

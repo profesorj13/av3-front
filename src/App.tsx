@@ -63,9 +63,9 @@ function App() {
         api.activities.getAll(),
       ]);
 
-      setCourses(courses as any);
-      setAreas(areas as any);
-      setSubjects(subjects as any);
+      setCourses(courses);
+      setAreas(areas);
+      setSubjects(subjects);
       setNuclei(nuclei as any);
       setKnowledgeAreas(knowledgeAreas as any);
       setCategories(categories as any);

@@ -45,6 +45,13 @@ export function ChatBot({
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Refocus input when generation completes
+  useEffect(() => {
+    if (!isChatGenerating && !collapsed) {
+      chatInputRef.current?.focus();
+    }
+  }, [isChatGenerating, collapsed]);
+
   const handleSendMessage = async () => {
     if (!chatInput.trim() || isChatGenerating || disabled) return;
 
@@ -56,10 +63,6 @@ export function ChatBot({
       await onSendMessage(message);
     } finally {
       setIsChatGenerating(false);
-      // Refocus the input after sending
-      setTimeout(() => {
-        chatInputRef.current?.focus();
-      }, 100);
     }
   };
 
@@ -145,8 +148,18 @@ export function ChatBot({
                   </div>
                 </div>
                 <div className="max-w-[85%] rounded-2xl p-3 bg-muted text-[#10182B]">
-                  <h4 className="body-1-medium text-[#10182B] mb-2">{welcomeMessage.title}</h4>
-                  <p className="body-2-regular text-[#10182B]">{welcomeMessage.content}</p>
+                  {isGenerating ? (
+                    <div className="flex items-center gap-1">
+                      <span className="w-2 h-2 bg-[#735FE3] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <span className="w-2 h-2 bg-[#735FE3] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <span className="w-2 h-2 bg-[#735FE3] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                    </div>
+                  ) : (
+                    <>
+                      <h4 className="body-1-medium text-[#10182B] mb-2">{welcomeMessage.title}</h4>
+                      <p className="body-2-regular text-[#10182B]">{welcomeMessage.content}</p>
+                    </>
+                  )}
                 </div>
               </div>
             )}
@@ -159,7 +172,7 @@ export function ChatBot({
                 onKeyDown={handleKeyDown}
                 placeholder={placeholder}
                 disabled={isGenerating || disabled}
-                className="w-full h-12 rounded-xl border-0 fill-primary px-4 pr-12 text-sm text-[#2C2C2C] placeholder:text-[#2C2C2C]/60 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full h-14 rounded-xl border border-gray-200 fill-primary px-4 pr-12 text-sm text-[#2C2C2C] placeholder:text-[#2C2C2C]/60 focus:outline-none focus:ring-2 focus:ring-primary/20 shadow-md"
               />
               <button
                 onClick={handleSendMessage}

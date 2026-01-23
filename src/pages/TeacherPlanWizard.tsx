@@ -34,7 +34,7 @@ export function TeacherPlanWizard() {
     subjects,
   } = useStore();
 
-  const currentCourseSubject = courseSubjects.find(cs => cs.id === courseSubjectId);
+  const currentCourseSubject = courseSubjects.find((cs) => cs.id === courseSubjectId);
 
   const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(false);
 
@@ -56,7 +56,7 @@ export function TeacherPlanWizard() {
       try {
         const subject = subjects.find((s) => s.id === currentCourseSubject?.subject_id);
         const areaId = subject?.area_id;
-        const fontsData = await api.fonts.getAll(areaId) as Font[];
+        const fontsData = (await api.fonts.getAll(areaId)) as Font[];
         setFonts(fontsData);
       } catch (error) {
         console.error('Error loading fonts:', error);
@@ -84,10 +84,10 @@ export function TeacherPlanWizard() {
       if (lessonWizardData.step === 2 && lessonWizardData.objective && !activityRecommendations) {
         setIsLoadingRecommendations(true);
         try {
-          const recommendations = await api.activities.recommend(
+          const recommendations = (await api.activities.recommend(
             lessonWizardData.objective,
-            lessonWizardData.categoryIds
-          ) as ActivityRecommendation;
+            lessonWizardData.categoryIds,
+          )) as ActivityRecommendation;
           setActivityRecommendations(recommendations);
         } catch (error) {
           console.error('Error loading recommendations:', error);
@@ -97,7 +97,13 @@ export function TeacherPlanWizard() {
       }
     };
     fetchRecommendations();
-  }, [lessonWizardData.step, lessonWizardData.objective, lessonWizardData.categoryIds, activityRecommendations, setActivityRecommendations]);
+  }, [
+    lessonWizardData.step,
+    lessonWizardData.objective,
+    lessonWizardData.categoryIds,
+    activityRecommendations,
+    setActivityRecommendations,
+  ]);
 
   const handleSelectAperturaActivity = (activityId: number) => {
     updateLessonWizardData({
@@ -195,9 +201,7 @@ export function TeacherPlanWizard() {
     <label
       key={activity.id}
       className={`block p-4 rounded-xl border-2 cursor-pointer transition-all ${
-        isSelected
-          ? 'border-primary bg-primary/5'
-          : 'border-gray-200 hover:border-gray-300 bg-white'
+        isSelected ? 'border-primary bg-primary/5' : 'border-gray-200 hover:border-gray-300 bg-white'
       }`}
     >
       <div className="flex items-start gap-3">
@@ -205,7 +209,11 @@ export function TeacherPlanWizard() {
           type="radio"
           name={`${momentType}-activity`}
           checked={isSelected}
-          onChange={() => momentType === 'apertura' ? handleSelectAperturaActivity(activity.id) : handleSelectCierreActivity(activity.id)}
+          onChange={() =>
+            momentType === 'apertura'
+              ? handleSelectAperturaActivity(activity.id)
+              : handleSelectCierreActivity(activity.id)
+          }
           className="mt-1 w-4 h-4 text-primary cursor-pointer"
         />
         <div className="flex-1 min-w-0">
@@ -233,8 +241,8 @@ export function TeacherPlanWizard() {
         isDisabled && !isSelected
           ? 'border-gray-100 bg-gray-50 cursor-not-allowed opacity-60'
           : isSelected
-          ? 'border-primary bg-primary/5 cursor-pointer'
-          : 'border-gray-200 hover:border-gray-300 bg-white cursor-pointer'
+            ? 'border-primary bg-primary/5 cursor-pointer'
+            : 'border-gray-200 hover:border-gray-300 bg-white cursor-pointer'
       }`}
     >
       <div className="flex items-start gap-3">
@@ -297,21 +305,6 @@ export function TeacherPlanWizard() {
               </div>
 
               <div className="activity-card-bg p-4 space-y-2 rounded-2xl">
-                <div className="mb-6">
-                  <h3 className="headline-1-bold text-secondary-foreground mb-2">Objetivo</h3>
-                  <p className="text-xs text-muted-foreground mb-2">
-                    El objetivo de la clase fue elegido en el itinerario del area. Podes modificarlo si es necesario.
-                  </p>
-                  <Textarea
-                    value={lessonWizardData.objective}
-                    onChange={(e) => updateLessonWizardData({ objective: e.target.value })}
-                    placeholder="Ingresa el objetivo de la clase..."
-                    className="min-h-[100px] resize-none"
-                  />
-                </div>
-
-                <div className="h-px bg-[#DAD5F6]" />
-
                 <div className="py-4 space-y-4">
                   <h3 className="headline-1-bold text-secondary-foreground mb-2">Nudos disciplinares</h3>
                   <p className="body-2-regular text-secondary-foreground">
@@ -332,15 +325,28 @@ export function TeacherPlanWizard() {
 
                 <div className="py-4">
                   <h3 className="headline-1-bold text-secondary-foreground mb-2">Categorias a trabajar</h3>
-                  <ul className="space-y-1">
+                  <ul className="space-y-1 list-disc list-inside">
                     {availableCategories.map((c) => (
-                      <li key={c.id} className="body-2-regular text-secondary-foreground flex items-start">
-                        <span className="mr-2">-</span>
-                        <span>{c.name}</span>
+                      <li key={c.id} className="body-2-regular text-secondary-foreground">
+                        {c.name}
                       </li>
                     ))}
                   </ul>
                 </div>
+              </div>
+
+              {/* Objetivo - Separado */}
+              <div className="border-t border-[#DAD5F6] pt-6">
+                <h3 className="headline-1-bold text-secondary-foreground mb-2">Objetivo</h3>
+                <p className="body-2-regular text-muted-foreground mb-2">
+                  El objetivo de la clase fue elegido en el itinerario del area. Podes modificarlo si es necesario.
+                </p>
+                <Textarea
+                  value={lessonWizardData.objective}
+                  onChange={(e) => updateLessonWizardData({ objective: e.target.value })}
+                  placeholder="Ingresa el objetivo de la clase..."
+                  className="min-h-25 resize-none"
+                />
               </div>
             </div>
           )}
@@ -382,7 +388,8 @@ export function TeacherPlanWizard() {
                     <div>
                       <h3 className="body-1-medium text-secondary-foreground">Desarrollo/Construccion</h3>
                       <p className="text-sm text-muted-foreground">
-                        Selecciona hasta 3 actividades ({lessonWizardData.moments.desarrollo.activities?.length || 0}/3 seleccionadas)
+                        Selecciona hasta 3 actividades ({lessonWizardData.moments.desarrollo.activities?.length || 0}/3
+                        seleccionadas)
                       </p>
                     </div>
                     <div className="space-y-2">
@@ -410,7 +417,7 @@ export function TeacherPlanWizard() {
                 </div>
 
                 {/* Right column - Customization Panel */}
-                <div className="w-80 flex-shrink-0">
+                <div className="w-80 shrink-0">
                   <CustomizationPanel
                     customInstruction={lessonWizardData.customInstruction}
                     onCustomInstructionChange={(value) => updateLessonWizardData({ customInstruction: value })}
