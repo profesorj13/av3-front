@@ -12,6 +12,7 @@ import type {
   MomentType,
   Activity,
   LessonPlan,
+  LessonPlanMoments,
   ChatMessage,
   UserRole,
   Font,
@@ -42,11 +43,7 @@ interface LessonWizardData {
   knowledgeContent: string;
   didacticStrategies: string;
   classFormat: string;
-  moments: {
-    apertura: { activities: any[] };
-    desarrollo: { activities: any[] };
-    cierre: { activities: any[] };
-  };
+  moments: LessonPlanMoments;
   customInstruction: string;
   resourcesMode: 'global' | 'per_moment';
   globalFontId: number | null;

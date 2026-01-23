@@ -5,7 +5,7 @@ import { useStore } from '@/store/useStore';
 import { Button } from '@/components/ui/button';
 import { ChatBot } from '@/components/ui/ChatBot';
 import { api } from '@/services/api';
-import type { CoordinationDocument, ChatMessage } from '@/types';
+import type { CoordinationDocument, ChatMessage, StrategyType } from '@/types';
 
 export function Document() {
   const { id } = useParams();
@@ -41,7 +41,7 @@ export function Document() {
   } | null>(null);
   const [editingStrategyType, setEditingStrategyType] = useState(false);
 
-  const STRATEGY_TYPE_OPTIONS = [
+  const STRATEGY_TYPE_OPTIONS: { value: StrategyType; label: string }[] = [
     { value: 'Proyecto', label: 'Proyecto' },
     { value: 'Taller/laboratorio', label: 'Taller/laboratorio' },
     { value: 'Ateneo/Debate', label: 'Ateneo/Debate' },
@@ -87,14 +87,14 @@ export function Document() {
 
       const assistantMessage: ChatMessage = {
         role: 'assistant',
-        content: (chatResult as any).response,
+        content: chatResult.response,
       };
 
       addChatMessage(assistantMessage);
 
       // Update document with any changes (exactly like original frontend)
-      if ((chatResult as any).document) {
-        setCurrentDocument({ ...currentDocument, ...(chatResult as any).document });
+      if (chatResult.document) {
+        setCurrentDocument({ ...currentDocument, ...chatResult.document });
       }
     } catch (error) {
       console.error('Error sending chat message:', error);
@@ -113,11 +113,10 @@ export function Document() {
 
     setIsGenerating(true);
     try {
-      await api.chat.sendMessage(`/coordination-documents/${docId}/generate`, {});
-
+      await api.documents.generate(docId);
       // Reload the full document to get all generated content including class plans
       const updatedDoc = await api.documents.getById(docId);
-      setCurrentDocument(updatedDoc as CoordinationDocument);
+      setCurrentDocument(updatedDoc);
     } catch (error) {
       console.error('Error generating content:', error);
       alert('Error al generar contenido con IA');
@@ -127,20 +126,21 @@ export function Document() {
   };
 
   const handleSaveClassTitle = async (subjectId: number, classNumber: number, newTitle: string) => {
-    if (!currentDocument) return;
+    if (!currentDocument || !currentDocument.subjects_data) return;
 
-    const subjectsData = JSON.parse(JSON.stringify((currentDocument as any).subjects_data));
-    if (subjectsData[subjectId] && subjectsData[subjectId].class_plan) {
-      const classItem = subjectsData[subjectId].class_plan.find((c: any) => c.class_number === classNumber);
+    const subjectsDataCopy = JSON.parse(JSON.stringify(currentDocument.subjects_data));
+    if (subjectsDataCopy[subjectId]?.class_plan) {
+      const classItem = subjectsDataCopy[subjectId].class_plan.find(
+        (c: { class_number: number }) => c.class_number === classNumber,
+      );
       if (classItem && classItem.title !== newTitle) {
         classItem.title = newTitle;
         try {
-          await api.documents.update(docId, { subjects_data: subjectsData });
-          // Update local state directly (like original frontend)
+          await api.documents.update(docId, { subjects_data: subjectsDataCopy });
           setCurrentDocument({
             ...currentDocument,
-            subjects_data: subjectsData,
-          } as any);
+            subjects_data: subjectsDataCopy,
+          });
         } catch (error) {
           console.error('Error saving class title:', error);
         }
@@ -149,20 +149,21 @@ export function Document() {
   };
 
   const handleSaveLearningObjective = async (subjectId: number, classNumber: number, newObjective: string) => {
-    if (!currentDocument) return;
+    if (!currentDocument || !currentDocument.subjects_data) return;
 
-    const subjectsData = JSON.parse(JSON.stringify((currentDocument as any).subjects_data));
-    if (subjectsData[subjectId] && subjectsData[subjectId].class_plan) {
-      const classItem = subjectsData[subjectId].class_plan.find((c: any) => c.class_number === classNumber);
+    const subjectsDataCopy = JSON.parse(JSON.stringify(currentDocument.subjects_data));
+    if (subjectsDataCopy[subjectId]?.class_plan) {
+      const classItem = subjectsDataCopy[subjectId].class_plan.find(
+        (c: { class_number: number }) => c.class_number === classNumber,
+      );
       if (classItem && classItem.objective !== newObjective) {
         classItem.objective = newObjective;
         try {
-          await api.documents.update(docId, { subjects_data: subjectsData });
-          // Update local state directly (like original frontend)
+          await api.documents.update(docId, { subjects_data: subjectsDataCopy });
           setCurrentDocument({
             ...currentDocument,
-            subjects_data: subjectsData,
-          } as any);
+            subjects_data: subjectsDataCopy,
+          });
         } catch (error) {
           console.error('Error saving learning objective:', error);
         }
@@ -201,7 +202,14 @@ export function Document() {
       if (field === 'title') {
         updateData = { name: updatedContent };
       } else if (field === 'strategy') {
-        updateData = { methodological_strategies: updatedContent };
+        // Mantener el type existente y actualizar solo el context
+        const currentStrategies = currentDocument.methodological_strategies;
+        updateData = {
+          methodological_strategies: {
+            type: currentStrategies?.type || 'Proyecto',
+            context: updatedContent,
+          },
+        };
       } else if (field === 'problem_edge') {
         updateData = { problem_edge: updatedContent };
       } else if (field === 'eval_criteria') {
@@ -213,7 +221,7 @@ export function Document() {
       setCurrentDocument({
         ...currentDocument,
         ...updateData,
-      } as any);
+      });
 
       // Clear editing state for this field
       setEditingContent((prev) => {
@@ -232,28 +240,9 @@ export function Document() {
     return <div className="flex items-center justify-center h-screen">Cargando...</div>;
   }
 
-  const categoryMap: Record<number, string> = {};
-  ((currentDocument as any).categories || []).forEach((c: any) => {
-    categoryMap[c.id] = c.name;
-  });
-
-  const subjectsData = (currentDocument as any).subjects_data || {};
-  const subjects = (currentDocument as any).subjects || [];
-
-  const documentCategoryIds = (currentDocument as any).category_ids || [];
-  const assignedCategoryIds = new Set<number>();
-  Object.values(subjectsData).forEach((sData: any) => {
-    (sData.class_plan || []).forEach((c: any) => {
-      (c.category_ids || []).forEach((catId: number) => assignedCategoryIds.add(catId));
-    });
-  });
-
-  const unassignedCategories = documentCategoryIds
-    .filter((catId: number) => !assignedCategoryIds.has(catId))
-    .map((catId: number) => ({ id: catId, name: categoryMap[catId] || `Categoría ${catId}` }));
-
-  const hasContent = (currentDocument as any).methodological_strategies; /* &&
-    (currentDocument as any).methodological_strategies.trim().length > 0; */
+  const subjectsData = currentDocument.subjects_data || {};
+  const subjects = currentDocument.subjects || [];
+  const hasContent = !!currentDocument.methodological_strategies;
 
   return (
     <div className="h-screen flex flex-col gradient-background">
@@ -414,14 +403,13 @@ export function Document() {
                           className={`body-2-regular text-secondary-foreground whitespace-pre-wrap ${!isReadOnly ? 'cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors' : 'p-2'}`}
                           onClick={
                             !isReadOnly
-                              ? () => handleContentEdit('problem_edge', (currentDocument as any).problem_edge)
+                              ? () => handleContentEdit('problem_edge', currentDocument.problem_edge || '')
                               : undefined
                           }
                           title={!isReadOnly ? 'Clic para editar' : ''}
                         >
                           {hasContent ? (
-                            (currentDocument as any).problem_edge ||
-                            'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.'
+                            currentDocument.problem_edge || ''
                           ) : (
                             <p className="text-[#47566C]/60 italic">Generando contenido con IA...</p>
                           )}
@@ -443,23 +431,19 @@ export function Document() {
                         <div className="w-1 h-5 bg-primary rounded-full" />
                         {editingStrategyType && !isReadOnly ? (
                           <select
-                            value={
-                              typeof (currentDocument as any).methodological_strategies?.type === 'string'
-                                ? (currentDocument as any).methodological_strategies.type
-                                : (currentDocument as any).methodological_strategies?.type?.type || ''
-                            }
+                            value={currentDocument.methodological_strategies?.type || 'Proyecto'}
                             onChange={async (e) => {
-                              const newType = e.target.value;
+                              const newType = e.target.value as StrategyType;
                               try {
                                 const updatedStrategies = {
-                                  ...(currentDocument as any).methodological_strategies,
                                   type: newType,
+                                  context: currentDocument.methodological_strategies?.context || '',
                                 };
                                 await api.documents.update(docId, { methodological_strategies: updatedStrategies });
                                 setCurrentDocument({
                                   ...currentDocument,
                                   methodological_strategies: updatedStrategies,
-                                } as any);
+                                });
                               } catch (error) {
                                 console.error('Error saving strategy type:', error);
                               }
@@ -481,9 +465,7 @@ export function Document() {
                             onClick={!isReadOnly ? () => setEditingStrategyType(true) : undefined}
                             title={!isReadOnly ? 'Clic para editar' : ''}
                           >
-                            {typeof (currentDocument as any).methodological_strategies?.type === 'string'
-                              ? (currentDocument as any).methodological_strategies.type
-                              : (currentDocument as any).methodological_strategies?.type?.type || 'Proyecto'}
+                            {currentDocument.methodological_strategies?.type || 'Proyecto'}
                           </span>
                         )}
                       </div>
@@ -531,19 +513,13 @@ export function Document() {
                           className={`body-2-regular text-secondary-foreground whitespace-pre-wrap ${!isReadOnly ? 'cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors' : 'p-2'}`}
                           onClick={
                             !isReadOnly
-                              ? () => handleContentEdit('strategy', (currentDocument as any).methodological_strategies)
+                              ? () => handleContentEdit('strategy', currentDocument.methodological_strategies?.context || '')
                               : undefined
                           }
                           title={!isReadOnly ? 'Clic para editar' : ''}
                         >
                           {hasContent ? (
-                            typeof (currentDocument as any).methodological_strategies === 'string' ? (
-                              (currentDocument as any).methodological_strategies
-                            ) : (
-                              (currentDocument as any).methodological_strategies?.context ||
-                              (currentDocument as any).methodological_strategies?.type ||
-                              JSON.stringify((currentDocument as any).methodological_strategies)
-                            )
+                            currentDocument.methodological_strategies?.context || ''
                           ) : (
                             <p className="text-[#47566C]/60 italic">Generando contenido con IA...</p>
                           )}
@@ -601,14 +577,14 @@ export function Document() {
                           className={`body-2-regular text-secondary-foreground ${!isReadOnly ? 'cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors' : 'p-2'}`}
                           onClick={
                             !isReadOnly
-                              ? () => handleContentEdit('eval_criteria', (currentDocument as any).eval_criteria)
+                              ? () => handleContentEdit('eval_criteria', currentDocument.eval_criteria || '')
                               : undefined
                           }
                           title={!isReadOnly ? 'Clic para editar' : ''}
                         >
                           {hasContent ? (
                             <ul className="space-y-2">
-                              {((currentDocument as any).eval_criteria || '')
+                              {(currentDocument.eval_criteria || '')
                                 .split(/\\n|\n/)
                                 .filter((line: string) => line.trim())
                                 .map((line: string, index: number) => {
@@ -618,7 +594,7 @@ export function Document() {
                                   return (
                                     <li key={index} className="flex items-start gap-2">
                                       {isBullet && (
-                                        <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
+                                        <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
                                       )}
                                       <span className={isBullet ? '' : 'ml-3.5'}>{content}</span>
                                     </li>
@@ -756,12 +732,12 @@ export function Document() {
                   <div key={weekLabel} className="space-y-3">
                     <h4 className="body-2-medium text-[#47566C] text-sm">{weekLabel}</h4>
                     <div className="space-y-2">
-                      {classes.map((c: any, idx: number) => {
+                      {classes.map((c, idx: number) => {
                         const getObjective = () => {
-                          const sData = (currentDocument as any).subjects_data || {};
-                          const subjectData = sData[c.subject_id] || {};
+                          const sData = currentDocument.subjects_data || {};
+                          const subjectData = sData[c.subject_id] || { class_plan: [] };
                           const classPlan = subjectData.class_plan || [];
-                          const classItem = classPlan.find((item: any) => item.class_number === c.class_number);
+                          const classItem = classPlan.find((item) => item.class_number === c.class_number);
                           return classItem?.objective || '...';
                         };
 
@@ -778,19 +754,18 @@ export function Document() {
                                 type="text"
                                 value={c.title || ''}
                                 onChange={(e) => {
-                                  const sDataCopy = JSON.parse(
-                                    JSON.stringify((currentDocument as any).subjects_data),
-                                  );
-                                  if (sDataCopy[c.subject_id] && sDataCopy[c.subject_id].class_plan) {
+                                  if (!currentDocument.subjects_data) return;
+                                  const sDataCopy = JSON.parse(JSON.stringify(currentDocument.subjects_data));
+                                  if (sDataCopy[c.subject_id]?.class_plan) {
                                     const classItem = sDataCopy[c.subject_id].class_plan.find(
-                                      (item: any) => item.class_number === c.class_number,
+                                      (item: { class_number: number }) => item.class_number === c.class_number,
                                     );
                                     if (classItem) {
                                       classItem.title = e.target.value;
                                       setCurrentDocument({
                                         ...currentDocument,
                                         subjects_data: sDataCopy,
-                                      } as any);
+                                      });
                                     }
                                   }
                                 }}
@@ -899,14 +874,6 @@ export function Document() {
 
               {subjects.length === 0 && (
                 <p className="body-2-regular text-[#47566C] text-center">No hay materias configuradas</p>
-              )}
-
-              {/* Loading state for unassigned categories */}
-              {unassignedCategories.length > 0 && (
-                <div className="flex flex-col items-center justify-center py-12">
-                  <Loader2 className="w-8 h-8 animate-spin text-primary mb-2" />
-                  <p className="body-2-regular text-[#47566C]">Generando clases con IA...</p>
-                </div>
               )}
             </div>
           </div>

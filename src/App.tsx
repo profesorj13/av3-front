@@ -47,7 +47,7 @@ function App() {
         documents,
         courseSubjects,
         momentTypes,
-        activities,
+        activitiesByMoment,
       ] = await Promise.all([
         api.courses.getAll(),
         api.areas.getAll(),
@@ -61,16 +61,23 @@ function App() {
         api.activities.getAll(),
       ]);
 
-      setCourses(courses as any);
-      setAreas(areas as any);
-      setSubjects(subjects as any);
+      // Flatten activities from grouped response to array
+      const activities = [
+        ...activitiesByMoment.apertura,
+        ...activitiesByMoment.desarrollo,
+        ...activitiesByMoment.cierre,
+      ];
+
+      setCourses(courses);
+      setAreas(areas);
+      setSubjects(subjects);
       setNuclei(nuclei as any);
       setKnowledgeAreas(knowledgeAreas as any);
-      setCategories(categories as any);
-      setDocuments(documents as any);
-      setCourseSubjects(courseSubjects as any);
-      setMomentTypes(momentTypes as any);
-      setActivities(activities as any);
+      setCategories(categories);
+      setDocuments(documents);
+      setCourseSubjects(courseSubjects);
+      setMomentTypes(momentTypes);
+      setActivities(activities);
     } catch (error) {
       console.error('Error loading data:', error);
     }
