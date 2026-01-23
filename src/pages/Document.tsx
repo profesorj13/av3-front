@@ -360,7 +360,7 @@ export function Document() {
               <div className="space-y-4">
                 {/* Eje Problemático Section */}
                 <div className="space-y-4">
-                  <h3 className="headline-1-bold text-[#10182B]">Eje problemático</h3>
+                  <h3 className="section-title text-[#10182B]">Eje problemático</h3>
                   {isGenerating ? (
                     <div className="flex flex-col items-center justify-center py-12">
                       <Loader2 className="w-8 h-8 animate-spin text-primary mb-2" />
@@ -373,7 +373,7 @@ export function Document() {
                           <textarea
                             value={editingContent.problem_edge}
                             onChange={(e) => handleContentEdit('problem_edge', e.target.value)}
-                            className="w-full p-3 border border-gray-300 rounded-lg body-2-regular text-secondary-foreground leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 whitespace-pre-wrap"
+                            className="w-full p-3 border border-gray-300 rounded-lg section-description text-[#324155] leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 whitespace-pre-wrap"
                             rows={8}
                             placeholder="Editá el eje problemático..."
                           />
@@ -400,7 +400,7 @@ export function Document() {
                         </div>
                       ) : (
                         <div
-                          className={`body-2-regular text-secondary-foreground whitespace-pre-wrap ${!isReadOnly ? 'cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors' : 'p-2'}`}
+                          className={`section-description text-[#324155] leading-relaxed whitespace-pre-wrap ${!isReadOnly ? 'cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors' : 'p-2'}`}
                           onClick={
                             !isReadOnly
                               ? () => handleContentEdit('problem_edge', currentDocument.problem_edge || '')
@@ -425,10 +425,10 @@ export function Document() {
                 {/* Estrategia Metodológica Section */}
                 <div className="space-y-4">
                   <div>
-                    <h3 className="headline-1-bold text-[#10182B]">Estrategia metodológica</h3>
+                    <h3 className="section-title text-[#10182B]">Estrategia metodológica</h3>
                     {hasContent && (
                       <div className="flex items-center gap-2 mt-2">
-                        <div className="w-1 h-5 bg-primary rounded-full" />
+                        <div className="w-1 h-5 bg-[#10182B] rounded-full" />
                         {editingStrategyType && !isReadOnly ? (
                           <select
                             value={currentDocument.methodological_strategies?.type || 'proyecto'}
@@ -450,7 +450,7 @@ export function Document() {
                               setEditingStrategyType(false);
                             }}
                             onBlur={() => setEditingStrategyType(false)}
-                            className="font-semibold text-[#10182B] bg-transparent border-b-2 border-primary focus:outline-none cursor-pointer"
+                            className="font-semibold text-[#10182B] bg-transparent border-b-2 border-[#10182B] focus:outline-none cursor-pointer"
                             autoFocus
                           >
                             {STRATEGY_TYPE_OPTIONS.map((option) => (
@@ -483,7 +483,7 @@ export function Document() {
                           <textarea
                             value={editingContent.strategy}
                             onChange={(e) => handleContentEdit('strategy', e.target.value)}
-                            className="w-full p-3 border border-gray-300 rounded-lg body-2-regular text-secondary-foreground leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 whitespace-pre-wrap"
+                            className="w-full p-3 border border-gray-300 rounded-lg section-description text-[#324155] leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 whitespace-pre-wrap"
                             rows={12}
                             placeholder="Editá la estrategia metodológica..."
                           />
@@ -510,7 +510,7 @@ export function Document() {
                         </div>
                       ) : (
                         <div
-                          className={`body-2-regular text-secondary-foreground whitespace-pre-wrap ${!isReadOnly ? 'cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors' : 'p-2'}`}
+                          className={`section-description text-[#324155] leading-relaxed whitespace-pre-wrap ${!isReadOnly ? 'cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors' : 'p-2'}`}
                           onClick={
                             !isReadOnly
                               ? () => handleContentEdit('strategy', currentDocument.methodological_strategies?.context || '')
@@ -534,7 +534,7 @@ export function Document() {
 
                 {/* Criterios de Evaluación Section */}
                 <div className="space-y-4">
-                  <h3 className="headline-1-bold text-[#10182B]">Criterios de evaluación</h3>
+                  <h3 className="section-title text-[#10182B]">Criterios de evaluación</h3>
                   {isGenerating ? (
                     <div className="flex flex-col items-center justify-center py-12">
                       <Loader2 className="w-8 h-8 animate-spin text-primary mb-2" />
@@ -547,7 +547,7 @@ export function Document() {
                           <textarea
                             value={editingContent.eval_criteria}
                             onChange={(e) => handleContentEdit('eval_criteria', e.target.value)}
-                            className="w-full p-3 border border-gray-300 rounded-lg body-2-regular text-secondary-foreground leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 whitespace-pre-wrap"
+                            className="w-full p-3 border border-gray-300 rounded-lg section-description text-[#324155] leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 whitespace-pre-wrap"
                             rows={8}
                             placeholder="Editá los criterios de evaluación..."
                           />
@@ -574,7 +574,7 @@ export function Document() {
                         </div>
                       ) : (
                         <div
-                          className={`body-2-regular text-secondary-foreground ${!isReadOnly ? 'cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors' : 'p-2'}`}
+                          className={`section-description text-[#324155] leading-relaxed ${!isReadOnly ? 'cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors' : 'p-2'}`}
                           onClick={
                             !isReadOnly
                               ? () => handleContentEdit('eval_criteria', currentDocument.eval_criteria || '')
@@ -594,7 +594,7 @@ export function Document() {
                                   return (
                                     <li key={index} className="flex items-start gap-2">
                                       {isBullet && (
-                                        <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
+                                        <span className="w-1.5 h-1.5 rounded-full bg-[#324155] mt-2 shrink-0" />
                                       )}
                                       <span className={isBullet ? '' : 'ml-3.5'}>{content}</span>
                                     </li>
@@ -619,7 +619,7 @@ export function Document() {
                   <h3 className="headline-1-bold text-[#10182B]">Cronograma de clases por disciplinas</h3>
                   <Button
                     onClick={() => setIsClassesCollapsed(false)}
-                    className="flex items-center gap-2 text-primary bg-muted border-none cursor-pointer rounded-xl hover:bg-muted hover:text-primary"
+                    className="flex items-center gap-2 text-primary bg-transparent border-none cursor-pointer rounded-xl hover:bg-muted hover:text-primary"
                   >
                     Ver clases
                     <ChevronRight className="w-4 h-4" />
@@ -808,7 +808,7 @@ export function Document() {
                             editingLearningObjective.subjectId === c.subject_id &&
                             editingLearningObjective.classNumber === c.class_number ? (
                               <div className="mb-3">
-                                <span className="text-primary font-medium text-sm">Objetivo: </span>
+                                <span className="callout-semi-bold text-[#324155]">Objetivo: </span>
                                 <textarea
                                   value={editingLearningObjective.value}
                                   onChange={(e) => {
@@ -830,7 +830,7 @@ export function Document() {
                                       setEditingLearningObjective(null);
                                     }
                                   }}
-                                  className="w-full text-[#47566C] text-sm bg-transparent border-b border-primary focus:outline-none resize-none mt-1"
+                                  className="w-full callout-regular text-[#324155] bg-transparent border-b border-primary focus:outline-none resize-none mt-1"
                                   rows={3}
                                   placeholder=""
                                   autoFocus
@@ -838,7 +838,7 @@ export function Document() {
                               </div>
                             ) : (
                               <p
-                                className={`text-sm mb-3 leading-relaxed ${!isReadOnly ? 'cursor-pointer hover:opacity-70' : ''}`}
+                                className={`mb-3 leading-tight ${!isReadOnly ? 'cursor-pointer hover:opacity-70' : ''}`}
                                 onClick={
                                   !isReadOnly
                                     ? () =>
@@ -851,8 +851,8 @@ export function Document() {
                                 }
                                 title={!isReadOnly ? 'Clic para editar' : ''}
                               >
-                                <span className="text-primary font-medium">Objetivo: </span>
-                                <span className="text-[#47566C]">{getObjective()}</span>
+                                <span className="callout-semi-bold text-[#324155]">Objetivo: </span>
+                                <span className="callout-regular text-[#324155]">{getObjective()}</span>
                               </p>
                             )}
 

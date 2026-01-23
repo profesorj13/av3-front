@@ -45,6 +45,13 @@ export function ChatBot({
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Refocus input when generation completes
+  useEffect(() => {
+    if (!isChatGenerating && !collapsed) {
+      chatInputRef.current?.focus();
+    }
+  }, [isChatGenerating, collapsed]);
+
   const handleSendMessage = async () => {
     if (!chatInput.trim() || isChatGenerating || disabled) return;
 
@@ -56,10 +63,6 @@ export function ChatBot({
       await onSendMessage(message);
     } finally {
       setIsChatGenerating(false);
-      // Refocus the input after sending
-      setTimeout(() => {
-        chatInputRef.current?.focus();
-      }, 100);
     }
   };
 
@@ -169,7 +172,7 @@ export function ChatBot({
                 onKeyDown={handleKeyDown}
                 placeholder={placeholder}
                 disabled={isGenerating || disabled}
-                className="w-full h-12 rounded-xl border-0 fill-primary px-4 pr-12 text-sm text-[#2C2C2C] placeholder:text-[#2C2C2C]/60 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full h-14 rounded-xl border border-gray-200 fill-primary px-4 pr-12 text-sm text-[#2C2C2C] placeholder:text-[#2C2C2C]/60 focus:outline-none focus:ring-2 focus:ring-primary/20 shadow-md"
               />
               <button
                 onClick={handleSendMessage}

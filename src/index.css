@@ -146,6 +146,30 @@
     @apply bg-background text-foreground;
     font-family: 'DM Sans', sans-serif;
   }
+
+  /* Custom scrollbar styles */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(50, 65, 85, 0.3);
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(50, 65, 85, 0.5);
+  }
+
+  /* Hide scrollbar arrows/buttons */
+  ::-webkit-scrollbar-button {
+    display: none;
+  }
 }
 
 /* These are custom TailwindCSS utilities for typography. Enable things like 'caption-1-regular md:body-2-regular lg:large-title-2-bold' */
@@ -338,6 +362,29 @@
   font-weight: var(--font-weight-regular);
   font-size: var(--font-size-12);
   line-height: var(--line-height-150);
+  letter-spacing: 0;
+}
+
+@utility callout-semi-bold {
+  font-weight: var(--font-weight-semi-bold);
+  font-size: var(--font-size-12);
+  line-height: 100%;
+  letter-spacing: 0;
+}
+
+/* Section title: 20px, bold, 100% line-height */
+@utility section-title {
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-20);
+  line-height: 100%;
+  letter-spacing: 0;
+}
+
+/* Section description: 16px, regular, 100% line-height */
+@utility section-description {
+  font-weight: var(--font-weight-regular);
+  font-size: var(--font-size-16);
+  line-height: 100%;
   letter-spacing: 0;
 }
 
