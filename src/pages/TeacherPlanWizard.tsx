@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { ArrowRight, X, Sparkles } from 'lucide-react';
+import { ArrowRight, X, Sparkles, Plus } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { CustomizationPanel } from '@/components/ui/CustomizationPanel';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { api } from '@/services/api';
 import type { Font, Activity, ActivityRecommendation } from '@/types';
 
@@ -37,6 +38,9 @@ export function TeacherPlanWizard() {
   const currentCourseSubject = courseSubjects.find((cs) => cs.id === courseSubjectId);
 
   const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(false);
+  const [activityModalOpen, setActivityModalOpen] = useState(false);
+  const [activeMomentType, setActiveMomentType] = useState<'apertura' | 'desarrollo' | 'cierre' | null>(null);
+  const [tempSelectedActivities, setTempSelectedActivities] = useState<number[]>([]);
 
   useEffect(() => {
     const state = location.state as any;
@@ -84,10 +88,10 @@ export function TeacherPlanWizard() {
       if (lessonWizardData.step === 2 && lessonWizardData.objective && !activityRecommendations) {
         setIsLoadingRecommendations(true);
         try {
-          const recommendations = await api.activities.recommend(
+          const recommendations = (await api.activities.recommend(
             lessonWizardData.objective,
-            lessonWizardData.categoryIds
-          ) as ActivityRecommendation;
+            lessonWizardData.categoryIds,
+          )) as ActivityRecommendation;
           setActivityRecommendations(recommendations);
         } catch (error) {
           console.error('Error loading recommendations:', error);
@@ -97,45 +101,53 @@ export function TeacherPlanWizard() {
       }
     };
     fetchRecommendations();
-  }, [lessonWizardData.step, lessonWizardData.objective, lessonWizardData.categoryIds, activityRecommendations, setActivityRecommendations]);
+  }, [
+    lessonWizardData.step,
+    lessonWizardData.objective,
+    lessonWizardData.categoryIds,
+    activityRecommendations,
+    setActivityRecommendations,
+  ]);
 
-  const handleSelectAperturaActivity = (activityId: number) => {
-    updateLessonWizardData({
-      moments: {
-        ...lessonWizardData.moments,
-        apertura: { activities: [activityId] },
-      },
-    });
+  const openActivityModal = (momentType: 'apertura' | 'desarrollo' | 'cierre') => {
+    setActiveMomentType(momentType);
+    setTempSelectedActivities(lessonWizardData.moments[momentType].activities || []);
+    setActivityModalOpen(true);
   };
 
-  const handleSelectCierreActivity = (activityId: number) => {
-    updateLessonWizardData({
-      moments: {
-        ...lessonWizardData.moments,
-        cierre: { activities: [activityId] },
-      },
-    });
+  const handleToggleTempActivity = (activityId: number) => {
+    setTempSelectedActivities((prev) =>
+      prev.includes(activityId) ? prev.filter((id) => id !== activityId) : [...prev, activityId],
+    );
   };
 
-  const handleToggleDesarrolloActivity = (activityId: number) => {
-    const currentActivities = lessonWizardData.moments.desarrollo.activities || [];
-    let newActivities: number[];
-
-    if (currentActivities.includes(activityId)) {
-      newActivities = currentActivities.filter((id: number) => id !== activityId);
-    } else {
-      if (currentActivities.length >= 3) {
-        return; // Don't allow more than 3
-      }
-      newActivities = [...currentActivities, activityId];
+  const handleConfirmActivities = () => {
+    if (activeMomentType) {
+      updateLessonWizardData({
+        moments: {
+          ...lessonWizardData.moments,
+          [activeMomentType]: { activities: tempSelectedActivities },
+        },
+      });
     }
+    setActivityModalOpen(false);
+  };
 
+  const handleRemoveActivity = (momentType: 'apertura' | 'desarrollo' | 'cierre', activityId: number) => {
+    const currentActivities = lessonWizardData.moments[momentType].activities || [];
+    const newActivities = currentActivities.filter((id: number) => id !== activityId);
     updateLessonWizardData({
       moments: {
         ...lessonWizardData.moments,
-        desarrollo: { activities: newActivities },
+        [momentType]: { activities: newActivities },
       },
     });
+  };
+
+  const getActivityById = (activityId: number): Activity | undefined => {
+    return [...activitiesByMoment.apertura, ...activitiesByMoment.desarrollo, ...activitiesByMoment.cierre].find(
+      (a) => a.id === activityId,
+    );
   };
 
   const handleCreatePlan = async () => {
@@ -178,9 +190,9 @@ export function TeacherPlanWizard() {
   const availableCategories = categories.filter((c) => documentCategoryIds.includes(c.id));
 
   // Check if all moments have required activities
-  const aperturaSelected = (lessonWizardData.moments.apertura.activities || []).length === 1;
+  const aperturaSelected = (lessonWizardData.moments.apertura.activities || []).length >= 1;
   const desarrolloSelected = (lessonWizardData.moments.desarrollo.activities || []).length >= 1;
-  const cierreSelected = (lessonWizardData.moments.cierre.activities || []).length === 1;
+  const cierreSelected = (lessonWizardData.moments.cierre.activities || []).length >= 1;
   const allMomentsValid = aperturaSelected && desarrolloSelected && cierreSelected;
 
   const isRecommended = (momentType: string, activityId: number): boolean => {
@@ -190,78 +202,6 @@ export function TeacherPlanWizard() {
     if (momentType === 'desarrollo') return activityRecommendations.desarrollo_recommended_ids?.includes(activityId);
     return false;
   };
-
-  const renderActivityCard = (activity: Activity, momentType: 'apertura' | 'cierre', isSelected: boolean) => (
-    <label
-      key={activity.id}
-      className={`block p-4 rounded-xl border-2 cursor-pointer transition-all ${
-        isSelected
-          ? 'border-primary bg-primary/5'
-          : 'border-gray-200 hover:border-gray-300 bg-white'
-      }`}
-    >
-      <div className="flex items-start gap-3">
-        <input
-          type="radio"
-          name={`${momentType}-activity`}
-          checked={isSelected}
-          onChange={() => momentType === 'apertura' ? handleSelectAperturaActivity(activity.id) : handleSelectCierreActivity(activity.id)}
-          className="mt-1 w-4 h-4 text-primary cursor-pointer"
-        />
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-medium text-secondary-foreground">{activity.name}</span>
-            {isRecommended(momentType, activity.id) && (
-              <Badge variant="default" className="bg-amber-500 hover:bg-amber-500 text-white text-xs gap-1">
-                <Sparkles className="w-3 h-3" />
-                Recomendada
-              </Badge>
-            )}
-          </div>
-          {activity.description && (
-            <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{activity.description}</p>
-          )}
-        </div>
-      </div>
-    </label>
-  );
-
-  const renderDesarrolloActivityCard = (activity: Activity, isSelected: boolean, isDisabled: boolean) => (
-    <label
-      key={activity.id}
-      className={`block p-4 rounded-xl border-2 transition-all ${
-        isDisabled && !isSelected
-          ? 'border-gray-100 bg-gray-50 cursor-not-allowed opacity-60'
-          : isSelected
-          ? 'border-primary bg-primary/5 cursor-pointer'
-          : 'border-gray-200 hover:border-gray-300 bg-white cursor-pointer'
-      }`}
-    >
-      <div className="flex items-start gap-3">
-        <Checkbox
-          id={`desarrollo-${activity.id}`}
-          checked={isSelected}
-          disabled={isDisabled && !isSelected}
-          onCheckedChange={() => handleToggleDesarrolloActivity(activity.id)}
-          className="mt-1 cursor-pointer"
-        />
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-medium text-secondary-foreground">{activity.name}</span>
-            {isRecommended('desarrollo', activity.id) && (
-              <Badge variant="default" className="bg-amber-500 hover:bg-amber-500 text-white text-xs gap-1">
-                <Sparkles className="w-3 h-3" />
-                Recomendada
-              </Badge>
-            )}
-          </div>
-          {activity.description && (
-            <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{activity.description}</p>
-          )}
-        </div>
-      </div>
-    </label>
-  );
 
   return (
     <div className="fixed inset-0 z-50 gradient-background flex flex-col">
@@ -297,21 +237,6 @@ export function TeacherPlanWizard() {
               </div>
 
               <div className="activity-card-bg p-4 space-y-2 rounded-2xl">
-                <div className="mb-6">
-                  <h3 className="headline-1-bold text-secondary-foreground mb-2">Objetivo</h3>
-                  <p className="text-xs text-muted-foreground mb-2">
-                    El objetivo de la clase fue elegido en el itinerario del area. Podes modificarlo si es necesario.
-                  </p>
-                  <Textarea
-                    value={lessonWizardData.objective}
-                    onChange={(e) => updateLessonWizardData({ objective: e.target.value })}
-                    placeholder="Ingresa el objetivo de la clase..."
-                    className="min-h-25 resize-none"
-                  />
-                </div>
-
-                <div className="h-px bg-[#DAD5F6]" />
-
                 <div className="py-4 space-y-4">
                   <h3 className="headline-1-bold text-secondary-foreground mb-2">Nudos disciplinares</h3>
                   <p className="body-2-regular text-secondary-foreground">
@@ -332,15 +257,28 @@ export function TeacherPlanWizard() {
 
                 <div className="py-4">
                   <h3 className="headline-1-bold text-secondary-foreground mb-2">Categorias a trabajar</h3>
-                  <ul className="space-y-1">
+                  <ul className="space-y-1 list-disc list-inside">
                     {availableCategories.map((c) => (
-                      <li key={c.id} className="body-2-regular text-secondary-foreground flex items-start">
-                        <span className="mr-2">-</span>
-                        <span>{c.name}</span>
+                      <li key={c.id} className="body-2-regular text-secondary-foreground">
+                        {c.name}
                       </li>
                     ))}
                   </ul>
                 </div>
+              </div>
+
+              {/* Objetivo - Separado */}
+              <div className="border-t border-[#DAD5F6] pt-6">
+                <h3 className="headline-1-bold text-secondary-foreground mb-2">Objetivo</h3>
+                <p className="body-2-regular text-muted-foreground mb-2">
+                  El objetivo de la clase fue elegido en el itinerario del area. Podes modificarlo si es necesario.
+                </p>
+                <Textarea
+                  value={lessonWizardData.objective}
+                  onChange={(e) => updateLessonWizardData({ objective: e.target.value })}
+                  placeholder="Ingresa el objetivo de la clase..."
+                  className="min-h-25 resize-none"
+                />
               </div>
             </div>
           )}
@@ -348,9 +286,10 @@ export function TeacherPlanWizard() {
           {lessonWizardData.step === 2 && (
             <div className="space-y-6">
               <div className="space-y-2">
-                <h2 className="title-2-bold text-[#2C2C2C]">Momentos y actividades</h2>
+                <h2 className="title-2-bold text-[#2C2C2C]">Momentos de la clase</h2>
                 <p className="body-2-regular text-[#2C2C2C]">
-                  Selecciona las actividades que se trabajaran en cada momento de la clase.
+                  Agregá actividades para la apertura, el desarrollo y el cierre. Si lo necesitás, podés sumar
+                  indicaciones o recursos para que Alizia adapte la clase.
                 </p>
                 {isLoadingRecommendations && (
                   <p className="text-sm text-primary flex items-center gap-2">
@@ -362,50 +301,103 @@ export function TeacherPlanWizard() {
 
               <div className="flex gap-6">
                 {/* Left column - Moments */}
-                <div className="flex-1 space-y-6">
+                <div className="flex-1 space-y-4">
+                  <h3 className="headline-1-bold text-secondary-foreground">Actividades por momento</h3>
+
                   {/* Apertura Section */}
-                  <div className="space-y-3 activity-card-bg rounded-2xl p-4">
-                    <div>
-                      <h3 className="body-1-medium text-secondary-foreground">Apertura/Motivacion</h3>
-                      <p className="text-sm text-muted-foreground">Selecciona 1 actividad para el inicio de la clase</p>
-                    </div>
-                    <div className="space-y-2">
-                      {activitiesByMoment.apertura.map((activity) => {
-                        const isSelected = lessonWizardData.moments.apertura.activities?.includes(activity.id);
-                        return renderActivityCard(activity, 'apertura', isSelected);
+                  <div className="activity-card-bg rounded-2xl p-4">
+                    <h4 className="body-1-medium text-secondary-foreground mb-2">Apertura/Motivacion</h4>
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {lessonWizardData.moments.apertura.activities?.map((activityId: number) => {
+                        const activity = getActivityById(activityId);
+                        if (!activity) return null;
+                        return (
+                          <div
+                            key={activityId}
+                            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#F5F3FF] border border-[#DAD5F6]"
+                          >
+                            <span className="text-sm text-secondary-foreground">{activity.name}</span>
+                            <button
+                              onClick={() => handleRemoveActivity('apertura', activityId)}
+                              className="text-muted-foreground hover:text-destructive transition-colors cursor-pointer"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        );
                       })}
                     </div>
+                    <button
+                      onClick={() => openActivityModal('apertura')}
+                      className="inline-flex items-center gap-1 text-sm text-[#324155] hover:text-[#324155]/80 transition-colors cursor-pointer"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Agregar actividad
+                    </button>
                   </div>
 
                   {/* Desarrollo Section */}
-                  <div className="space-y-3 activity-card-bg rounded-2xl p-4">
-                    <div>
-                      <h3 className="body-1-medium text-secondary-foreground">Desarrollo/Construccion</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Selecciona hasta 3 actividades ({lessonWizardData.moments.desarrollo.activities?.length || 0}/3 seleccionadas)
-                      </p>
-                    </div>
-                    <div className="space-y-2">
-                      {activitiesByMoment.desarrollo.map((activity) => {
-                        const isSelected = lessonWizardData.moments.desarrollo.activities?.includes(activity.id);
-                        const isDisabled = (lessonWizardData.moments.desarrollo.activities?.length || 0) >= 3;
-                        return renderDesarrolloActivityCard(activity, isSelected, isDisabled);
+                  <div className="activity-card-bg rounded-2xl p-4">
+                    <h4 className="body-1-medium text-secondary-foreground mb-2">Desarrollo/Construccion</h4>
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {lessonWizardData.moments.desarrollo.activities?.map((activityId: number) => {
+                        const activity = getActivityById(activityId);
+                        if (!activity) return null;
+                        return (
+                          <div
+                            key={activityId}
+                            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#F5F3FF] border border-[#DAD5F6]"
+                          >
+                            <span className="text-sm text-secondary-foreground">{activity.name}</span>
+                            <button
+                              onClick={() => handleRemoveActivity('desarrollo', activityId)}
+                              className="text-muted-foreground hover:text-destructive transition-colors cursor-pointer"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        );
                       })}
                     </div>
+                    <button
+                      onClick={() => openActivityModal('desarrollo')}
+                      className="inline-flex items-center gap-1 text-sm text-[#324155] hover:text-[#324155]/80 transition-colors cursor-pointer"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Agregar actividad
+                    </button>
                   </div>
 
                   {/* Cierre Section */}
-                  <div className="space-y-3 activity-card-bg rounded-2xl p-4">
-                    <div>
-                      <h3 className="body-1-medium text-secondary-foreground">Cierre/Metacognicion</h3>
-                      <p className="text-sm text-muted-foreground">Selecciona 1 actividad para el cierre de la clase</p>
-                    </div>
-                    <div className="space-y-2">
-                      {activitiesByMoment.cierre.map((activity) => {
-                        const isSelected = lessonWizardData.moments.cierre.activities?.includes(activity.id);
-                        return renderActivityCard(activity, 'cierre', isSelected);
+                  <div className="activity-card-bg rounded-2xl p-4">
+                    <h4 className="body-1-medium text-secondary-foreground mb-2">Cierre/Metacognicion</h4>
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {lessonWizardData.moments.cierre.activities?.map((activityId: number) => {
+                        const activity = getActivityById(activityId);
+                        if (!activity) return null;
+                        return (
+                          <div
+                            key={activityId}
+                            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#F5F3FF] border border-[#DAD5F6]"
+                          >
+                            <span className="text-sm text-secondary-foreground">{activity.name}</span>
+                            <button
+                              onClick={() => handleRemoveActivity('cierre', activityId)}
+                              className="text-muted-foreground hover:text-destructive transition-colors cursor-pointer"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        );
                       })}
                     </div>
+                    <button
+                      onClick={() => openActivityModal('cierre')}
+                      className="inline-flex items-center gap-1 text-sm text-[#324155] hover:text-[#324155]/80 transition-colors cursor-pointer"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Agregar actividad
+                    </button>
                   </div>
                 </div>
 
@@ -430,6 +422,66 @@ export function TeacherPlanWizard() {
               </div>
             </div>
           )}
+
+          {/* Activity Selection Modal */}
+          <Dialog open={activityModalOpen} onOpenChange={setActivityModalOpen}>
+            <DialogContent className="max-w-lg max-h-[80vh] flex flex-col">
+              <DialogHeader>
+                <DialogTitle>
+                  Seleccionar actividades -{' '}
+                  {activeMomentType === 'apertura'
+                    ? 'Apertura'
+                    : activeMomentType === 'desarrollo'
+                      ? 'Desarrollo'
+                      : 'Cierre'}
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-2 mt-4 flex-1 overflow-y-auto">
+                {activeMomentType &&
+                  activitiesByMoment[activeMomentType].map((activity) => {
+                    const isSelected = tempSelectedActivities.includes(activity.id);
+                    return (
+                      <label
+                        key={activity.id}
+                        className={`flex items-start gap-3 p-4 rounded-xl border-2 transition-all cursor-pointer ${
+                          isSelected
+                            ? 'border-primary bg-primary/5'
+                            : 'border-gray-200 hover:border-gray-300 bg-white'
+                        }`}
+                      >
+                        <Checkbox
+                          checked={isSelected}
+                          onCheckedChange={() => handleToggleTempActivity(activity.id)}
+                          className="mt-0.5 cursor-pointer"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-medium text-secondary-foreground">{activity.name}</span>
+                            {isRecommended(activeMomentType, activity.id) && (
+                              <Badge
+                                variant="default"
+                                className="bg-amber-500 hover:bg-amber-500 text-white text-xs gap-1"
+                              >
+                                <Sparkles className="w-3 h-3" />
+                                Recomendada
+                              </Badge>
+                            )}
+                          </div>
+                          {activity.description && (
+                            <p className="text-sm text-muted-foreground mt-1">{activity.description}</p>
+                          )}
+                        </div>
+                      </label>
+                    );
+                  })}
+              </div>
+              <div className="pt-4 border-t mt-4">
+                <Button onClick={handleConfirmActivities} className="w-full cursor-pointer">
+                  Confirmar seleccion
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
