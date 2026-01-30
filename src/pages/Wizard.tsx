@@ -130,11 +130,11 @@ export function Wizard() {
 
     const data = {
       name: wizardData.name,
-      area_id: wizardData.areaId,
+      area_id: wizardData.areaId!,
       start_date: wizardData.startDate,
       end_date: wizardData.endDate,
-      methodological_strategies: null,
-      subjects_data: Object.keys(subjectsData).length > 0 ? subjectsData : null,
+      methodological_strategies: undefined,
+      subjects_data: Object.keys(subjectsData).length > 0 ? subjectsData : undefined,
       nucleus_ids: wizardData.nucleusId ? [wizardData.nucleusId] : wizardData.nucleusIds,
       category_ids: wizardData.categoryIds,
     };

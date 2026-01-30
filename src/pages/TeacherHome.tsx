@@ -24,7 +24,7 @@ export function TeacherHome() {
     try {
       setIsLoading(true);
       const teacherCourseSubjects = await api.teachers.getCourses(teacherId);
-      setTeacherCourses(teacherCourseSubjects as CourseSubject[]);
+      setTeacherCourses(teacherCourseSubjects as unknown as CourseSubject[]);
     } catch (error) {
       console.error('Error loading teacher courses:', error);
     } finally {
