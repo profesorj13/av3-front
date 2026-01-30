@@ -18,6 +18,8 @@ import type {
   UserRole,
   Font,
   Resource,
+  Ramp,
+  Device,
 } from '../types';
 
 interface WizardData {
@@ -82,6 +84,9 @@ interface AppState {
   teacherChatHistory: ChatMessage[];
   resources: Resource[];
   currentResource: Resource | null;
+  inclusionChatHistory: ChatMessage[];
+  ramps: Ramp[];
+  devices: Device[];
 
   setUsers: (users: User[]) => void;
   setCurrentUser: (user: User | null) => void;
@@ -118,6 +123,10 @@ interface AppState {
   getUserArea: () => Area | undefined;
   setResources: (resources: Resource[]) => void;
   setCurrentResource: (resource: Resource | null) => void;
+  addInclusionChatMessage: (message: ChatMessage) => void;
+  clearInclusionChatHistory: () => void;
+  setRamps: (ramps: Ramp[]) => void;
+  setDevices: (devices: Device[]) => void;
 }
 
 export const useStore = create<AppState>((set, get) => ({
@@ -178,6 +187,9 @@ export const useStore = create<AppState>((set, get) => ({
   teacherChatHistory: [],
   resources: [],
   currentResource: null,
+  inclusionChatHistory: [],
+  ramps: [],
+  devices: [],
 
   setUsers: (users) => set({ users }),
   setCurrentUser: (currentUser) => set({ currentUser }),
@@ -293,4 +305,12 @@ export const useStore = create<AppState>((set, get) => ({
 
   setResources: (resources) => set({ resources }),
   setCurrentResource: (currentResource) => set({ currentResource }),
+
+  addInclusionChatMessage: (message) =>
+    set((state) => ({
+      inclusionChatHistory: [...state.inclusionChatHistory, message],
+    })),
+  clearInclusionChatHistory: () => set({ inclusionChatHistory: [] }),
+  setRamps: (ramps) => set({ ramps }),
+  setDevices: (devices) => set({ devices }),
 }));

@@ -10,12 +10,18 @@ import type {
   CoordinationStatusResponse,
   Course,
   CourseSubject,
+  Device,
   Font,
+  InclusionAssistResponse,
+  InclusionRecommendation,
+  InclusionStudent,
   LessonPlan,
   LessonPlanCreate,
   MomentType,
   ProblematicNucleus,
+  Ramp,
   SharedClassNumbersResponse,
+  StudentInclusionProfile,
   Subject,
   User,
 } from '@/types';
@@ -151,6 +157,33 @@ export const api = {
   },
   chat: {
     sendMessage: (endpoint: string, data: ChatRequest) => postData<ChatResponse>(endpoint, data),
+  },
+  inclusion: {
+    getRamps: () => fetchData<Ramp[]>('/ramps'),
+    getRamp: (id: number) => fetchData<Ramp>(`/ramps/${id}`),
+    getDevices: (rampId?: number) =>
+      fetchData<Device[]>(`/devices${rampId ? `?ramp_id=${rampId}` : ''}`),
+    getDevice: (id: number) => fetchData<Device>(`/devices/${id}`),
+    getStudentProfile: (studentId: number) =>
+      fetchData<StudentInclusionProfile>(`/students/${studentId}/inclusion-profile`),
+    createStudentProfile: (studentId: number, data: { is_transitory: boolean; difficulties: string[]; free_description?: string }) =>
+      postData<StudentInclusionProfile>(`/students/${studentId}/inclusion-profile`, data),
+    getCourseInclusionStudents: (courseId: number) =>
+      fetchData<InclusionStudent[]>(`/courses/${courseId}/inclusion-students`),
+    recommend: (data: {
+      subject: string;
+      objective: string;
+      duration?: string;
+      dynamic?: string;
+      materials?: string;
+      student_id: number;
+      history?: { role: string; content: string }[];
+    }) => postData<InclusionRecommendation>('/inclusion/recommend', data),
+    assist: (data: {
+      message: string;
+      student_id?: number;
+      history?: { role: string; content: string }[];
+    }) => postData<InclusionAssistResponse>('/inclusion/assist', data),
   },
   resources: {
     getAll: (userId?: number) => fetchData(`/resources${userId ? `?user_id=${userId}` : ''}`),
