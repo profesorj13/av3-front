@@ -15,7 +15,7 @@ export default defineConfig({
         theme_color: '#735FE3',
         background_color: '#f0eef9',
         display: 'standalone',
-        start_url: '/',
+        start_url: '/inclusion',
         icons: [
           {
             src: '/orb-icon.svg',

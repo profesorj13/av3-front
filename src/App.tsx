@@ -131,6 +131,15 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* PWA standalone: redirect / to /inclusion */}
+        <Route
+          path="/"
+          element={
+            window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone
+              ? <Navigate to="/inclusion" replace />
+              : <AuthenticatedRoutes />
+          }
+        />
         {/* Public routes (no auth required) */}
         <Route path="/inclusion" element={<InclusionHome />} />
         <Route path="/inclusion/planificar" element={<InclusionPlanner />} />
