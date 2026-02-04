@@ -58,7 +58,7 @@ export function RampDetail() {
         </div>
         <h2 className="large-title-2-bold text-foreground mb-2">{ramp.name}</h2>
         <p className="body-2-regular text-secondary-foreground max-w-xs">
-          {ramp.short_description || ramp.description}
+          {ramp.description}
         </p>
       </div>
 
