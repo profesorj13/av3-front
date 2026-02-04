@@ -19,6 +19,32 @@ export function InclusionHome() {
 
       <div className="w-full max-w-sm space-y-3">
         <button
+          onClick={() => navigate('/inclusion/primeros-pasos')}
+          className="w-full flex items-center gap-4 p-4 rounded-2xl border border-border bg-card hover:border-primary/50 transition-colors text-left"
+        >
+          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+            <BookOpen className="w-6 h-6 text-primary" />
+          </div>
+          <div>
+            <p className="text-base font-semibold">Primeros pasos</p>
+            <p className="text-sm text-muted-foreground">Conoce la valija y sus rampas</p>
+          </div>
+        </button>
+
+        <button
+          onClick={() => navigate('/inclusion/dispositivos')}
+          className="w-full flex items-center gap-4 p-4 rounded-2xl border border-border bg-card hover:border-primary/50 transition-colors text-left"
+        >
+          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+            <Package className="w-6 h-6 text-primary" />
+          </div>
+          <div>
+            <p className="text-base font-semibold">Dispositivos</p>
+            <p className="text-sm text-muted-foreground">Catálogo de la valija de inclusión</p>
+          </div>
+        </button>
+
+        <button
           onClick={() => navigate('/inclusion/asistencia')}
           className="w-full flex items-center gap-4 p-4 rounded-2xl border border-border bg-card hover:border-primary/50 transition-colors text-left"
         >
@@ -41,32 +67,6 @@ export function InclusionHome() {
           <div>
             <p className="text-base font-semibold">Planificar</p>
             <p className="text-sm text-muted-foreground">Adaptar una clase con dispositivos</p>
-          </div>
-        </button>
-
-        <button
-          onClick={() => navigate('/inclusion/primeros-pasos')}
-          className="w-full flex items-center gap-4 p-4 rounded-2xl border border-border bg-card hover:border-primary/50 transition-colors text-left"
-        >
-          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-            <BookOpen className="w-6 h-6 text-primary" />
-          </div>
-          <div>
-            <p className="text-base font-semibold">Primeros pasos</p>
-            <p className="text-sm text-muted-foreground">Conoce la valija y sus rampas</p>
-          </div>
-        </button>
-
-        <button
-          onClick={() => navigate('/inclusion/dispositivos')}
-          className="w-full flex items-center gap-4 p-4 rounded-2xl border border-border bg-card hover:border-primary/50 transition-colors text-left"
-        >
-          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-            <Package className="w-6 h-6 text-primary" />
-          </div>
-          <div>
-            <p className="text-base font-semibold">Dispositivos</p>
-            <p className="text-sm text-muted-foreground">Catalogo de la valija de inclusion</p>
           </div>
         </button>
       </div>

@@ -21,7 +21,7 @@ export function InclusionPlanner() {
   const chatEndRef = useRef<HTMLDivElement>(null);
   const [step, setStep] = useState<PlannerStep>('activity');
   const [messages, setMessages] = useState<{ role: string; content: string; type?: string; data?: any }[]>([
-    { role: 'assistant', content: 'Hola! Soy Alicia, tu asistente de inclusion. Vamos a planificar una clase inclusiva. Contame sobre la actividad.' },
+    { role: 'assistant', content: '¡Hola! Soy Alizia, tu asistente. Te acompaño a planificar una clase accesible e inclusiva. Contame de qué se trata la actividad' },
   ]);
   const [activityData, setActivityData] = useState<ActivityData>({
     subject: '',
@@ -74,11 +74,11 @@ export function InclusionPlanner() {
       ...prev,
       {
         role: 'user',
-        content: `Asignatura: ${activityData.subject}\nObjetivo: ${activityData.objective}\nDuracion: ${activityData.duration || 'No especificada'}\nDinamica: ${activityData.dynamic}\nMateriales: ${activityData.materials || 'No especificados'}`,
+        content: `Asignatura: ${activityData.subject}\nObjetivo: ${activityData.objective}\nDuración: ${activityData.duration || 'No especificada'}\nDinámica: ${activityData.dynamic}\nMateriales: ${activityData.materials || 'No especificados'}`,
       },
       {
         role: 'assistant',
-        content: 'Genial! Ahora selecciona el alumno que necesita adaptacion.',
+        content: '¡Genial! Ahora seleccioná el alumno que necesita adaptación.',
       },
     ]);
     setStep('student');
@@ -90,7 +90,7 @@ export function InclusionPlanner() {
       setMessages((prev) => [
         ...prev,
         { role: 'user', content: `Seleccione a ${student.name}` },
-        { role: 'assistant', content: `${student.name} no tiene un perfil de inclusion todavia. Vamos a crear uno. Contame sobre sus necesidades.` },
+        { role: 'assistant', content: `${student.name} no tiene un perfil de inclusión todavía. Vamos a crear uno. Contame sobre sus necesidades.` },
       ]);
       setStep('new_profile');
       return;
@@ -99,10 +99,10 @@ export function InclusionPlanner() {
     setSelectedStudent(student);
     const diffLabels: Record<string, string> = {
       MOTRICIDAD_MANOS_BRAZOS: 'motricidad en manos/brazos',
-      COMUNICACION_EXPRESION: 'comunicacion/expresion',
-      ATENCION_REGULACION_EMOCIONAL: 'atencion/regulacion emocional',
-      ACCESO_TECNOLOGIA_DIGITAL: 'acceso a tecnologia digital',
-      MULTIPLES: 'multiples dificultades',
+      COMUNICACION_EXPRESION: 'comunicación/expresión',
+      ATENCION_REGULACION_EMOCIONAL: 'atención/regulación emocional',
+      ACCESO_TECNOLOGIA_DIGITAL: 'acceso a tecnología digital',
+      MULTIPLES: 'múltiples dificultades',
       SIN_DEFINIR: 'sin definir',
     };
     const difficulties = student.difficulties?.map((d) => diffLabels[d] || d).join(', ') || 'sin especificar';
@@ -160,7 +160,7 @@ export function InclusionPlanner() {
 
       setRecommendedDevice(result.device);
       setChatHistory([
-        { role: 'user', content: `Necesito una recomendacion de dispositivo para ${student.name} en la actividad de ${activityData.objective} en ${activityData.subject}.` },
+        { role: 'user', content: `Necesito una recomendación de dispositivo para ${student.name} en la actividad de ${activityData.objective} en ${activityData.subject}.` },
         { role: 'assistant', content: result.response },
       ]);
 
@@ -178,7 +178,7 @@ export function InclusionPlanner() {
       console.error('Error getting recommendation:', e);
       setMessages((prev) => [
         ...prev,
-        { role: 'assistant', content: 'Hubo un error al generar la recomendacion. Por favor, intenta de nuevo.' },
+        { role: 'assistant', content: 'Hubo un error al generar la recomendación. Por favor, intentá de nuevo.' },
       ]);
     } finally {
       setIsLoading(false);
@@ -238,8 +238,8 @@ export function InclusionPlanner() {
   const difficultyOptions = [
     { value: 'MOTRICIDAD_MANOS_BRAZOS', label: 'Tiene dificultad para mover o controlar sus manos o brazos' },
     { value: 'COMUNICACION_EXPRESION', label: 'Tiene dificultad para comunicarse o expresar respuestas' },
-    { value: 'ATENCION_REGULACION_EMOCIONAL', label: 'Tiene dificultad para mantener la atencion o regular emociones' },
-    { value: 'ACCESO_TECNOLOGIA_DIGITAL', label: 'Tiene dificultad para acceder a la tecnologia digital' },
+    { value: 'ATENCION_REGULACION_EMOCIONAL', label: 'Tiene dificultad para mantener la atención o regular emociones' },
+    { value: 'ACCESO_TECNOLOGIA_DIGITAL', label: 'Tiene dificultad para acceder a la tecnología digital' },
     { value: 'MULTIPLES', label: 'Tiene varias de estas dificultades' },
     { value: 'SIN_DEFINIR', label: 'No estoy seguro / quiero explorar opciones' },
   ];
@@ -257,7 +257,7 @@ export function InclusionPlanner() {
         }} className="p-2 rounded-lg hover:bg-muted transition-colors">
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <h1 className="headline-1-emphasized">Planificar con perspectiva de inclusion</h1>
+        <h1 className="headline-1-emphasized">Planificar con perspectiva de inclusión</h1>
       </div>
 
       {/* Chat area */}
@@ -295,7 +295,7 @@ export function InclusionPlanner() {
                       }}
                       className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
                     >
-                      <Save className="w-4 h-4" /> Guardar planificacion
+                      <Save className="w-4 h-4" /> Guardar planificación
                     </button>
                   )}
                 </div>
@@ -322,7 +322,7 @@ export function InclusionPlanner() {
                     <SelectValue placeholder="Selecciona una asignatura" />
                   </SelectTrigger>
                   <SelectContent>
-                    {['Matematica', 'Practicas de lenguaje', 'Historia', 'Economia'].map((name) => (
+                    {['Matemática', 'Prácticas de lenguaje', 'Historia', 'Economía'].map((name) => (
                       <SelectItem key={name} value={name}>{name}</SelectItem>
                     ))}
                   </SelectContent>
@@ -340,7 +340,7 @@ export function InclusionPlanner() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-sm font-medium mb-1 block">Duracion</label>
+                  <label className="text-sm font-medium mb-1 block">Duración</label>
                   <input
                     type="text"
                     value={activityData.duration}
@@ -350,7 +350,7 @@ export function InclusionPlanner() {
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium mb-1 block">Dinamica</label>
+                  <label className="text-sm font-medium mb-1 block">Dinámica</label>
                   <Select value={activityData.dynamic} onValueChange={(v) => setActivityData((prev) => ({ ...prev, dynamic: v }))}>
                     <SelectTrigger className="w-full px-3 py-2.5 rounded-lg border border-input bg-background text-sm">
                       <SelectValue />
@@ -359,7 +359,7 @@ export function InclusionPlanner() {
                       <SelectItem value="individual">Individual</SelectItem>
                       <SelectItem value="grupal">Grupal</SelectItem>
                       <SelectItem value="parejas">En parejas</SelectItem>
-                      <SelectItem value="con_tecnologia">Con tecnologia</SelectItem>
+                      <SelectItem value="con_tecnologia">Con tecnología</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -370,7 +370,7 @@ export function InclusionPlanner() {
                   type="text"
                   value={activityData.materials}
                   onChange={(e) => setActivityData((prev) => ({ ...prev, materials: e.target.value }))}
-                  placeholder="Ej: Lapiz y cuaderno"
+                  placeholder="Ej: Lápiz y cuaderno"
                   className="w-full px-3 py-2.5 rounded-lg border border-input bg-background text-sm"
                 />
               </div>
@@ -413,7 +413,7 @@ export function InclusionPlanner() {
                 <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
                   <Plus className="w-4 h-4 text-muted-foreground" />
                 </div>
-                <p className="text-sm font-medium text-muted-foreground">Crear nuevo perfil de inclusion</p>
+                <p className="text-sm font-medium text-muted-foreground">Crear nuevo perfil de inclusión</p>
               </button>
             )}
           </div>
@@ -421,9 +421,9 @@ export function InclusionPlanner() {
 
         {step === 'new_profile' && selectedNewStudent && (
           <div className="bg-card border border-border rounded-2xl p-4 space-y-3">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Perfil de inclusion: {selectedNewStudent.name}</p>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Perfil de inclusión: {selectedNewStudent.name}</p>
             <div>
-              <label className="text-sm font-medium mb-2 block">La condicion es transitoria o permanente?</label>
+              <label className="text-sm font-medium mb-2 block">¿La condición es transitoria o permanente?</label>
               <div className="flex gap-2">
                 <button
                   onClick={() => setNewProfileData((prev) => ({ ...prev, is_transitory: true }))}
@@ -440,7 +440,7 @@ export function InclusionPlanner() {
               </div>
             </div>
             <div>
-              <label className="text-sm font-medium mb-2 block">Cual describe mejor al estudiante?</label>
+              <label className="text-sm font-medium mb-2 block">¿Cuál describe mejor al estudiante?</label>
               <div className="space-y-2">
                 {difficultyOptions.map((opt) => (
                   <button
@@ -456,7 +456,7 @@ export function InclusionPlanner() {
               </div>
             </div>
             <div>
-              <label className="text-sm font-medium mb-1 block">Algo mas sobre este alumno? (opcional)</label>
+              <label className="text-sm font-medium mb-1 block">¿Algo más sobre este alumno? (opcional)</label>
               <textarea
                 value={newProfileData.free_description}
                 onChange={(e) => setNewProfileData((prev) => ({ ...prev, free_description: e.target.value }))}
@@ -500,7 +500,7 @@ export function InclusionPlanner() {
               value={chatInput}
               onChange={(e) => setChatInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleChatSend()}
-              placeholder="Escribi un mensaje..."
+              placeholder="Escribí un mensaje..."
               disabled={isLoading}
               className="w-full h-14 rounded-xl border border-gray-200 px-4 pr-12 text-sm text-[#2C2C2C] placeholder:text-[#2C2C2C]/60 focus:outline-none focus:ring-2 focus:ring-primary/20 shadow-md"
             />
@@ -521,7 +521,7 @@ export function InclusionPlanner() {
       {/* Saved toast */}
       {savedToast && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2.5 rounded-xl bg-green-600 text-white text-sm font-medium shadow-lg">
-          <Check className="w-4 h-4" /> Planificacion guardada
+          <Check className="w-4 h-4" /> Planificación guardada
         </div>
       )}
 
@@ -529,7 +529,7 @@ export function InclusionPlanner() {
       {showBackConfirm && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center px-4" onClick={() => setShowBackConfirm(false)}>
           <div className="bg-card rounded-2xl p-5 w-full max-w-sm space-y-4" onClick={(e) => e.stopPropagation()}>
-            <h2 className="text-base font-semibold">Queres guardar la planificacion antes de salir?</h2>
+            <h2 className="text-base font-semibold">¿Querés guardar la planificación antes de salir?</h2>
             <div className="space-y-2">
               <button
                 onClick={() => {
@@ -707,19 +707,19 @@ function DeviceDetailModal({ device, onClose }: { device: Device; onClose: () =>
         {/* Sections */}
         <div className="p-4 space-y-3">
           {device.classroom_benefit && (
-            <ModalSection icon={<Sparkles className="w-5 h-5 text-primary" />} title="Para que te puede ayudar en clase">
+            <ModalSection icon={<Sparkles className="w-5 h-5 text-primary" />} title="Para qué te puede ayudar en clase">
               <p className="text-sm text-muted-foreground">{device.classroom_benefit}</p>
             </ModalSection>
           )}
 
           {device.how_to_use && (
-            <ModalSection icon={<BookOpen className="w-5 h-5 text-primary" />} title="Como usar">
+            <ModalSection icon={<BookOpen className="w-5 h-5 text-primary" />} title="Cómo usar">
               <p className="text-sm text-muted-foreground">{device.how_to_use}</p>
             </ModalSection>
           )}
 
           {device.rationale && (
-            <ModalSection icon={<GraduationCap className="w-5 h-5 text-emerald-500" />} title="Enfoque pedagogico">
+            <ModalSection icon={<GraduationCap className="w-5 h-5 text-emerald-500" />} title="Enfoque pedagógico">
               <p className="text-sm text-muted-foreground">{device.rationale}</p>
             </ModalSection>
           )}
@@ -731,13 +731,13 @@ function DeviceDetailModal({ device, onClose }: { device: Device; onClose: () =>
           )}
 
           {device.needs_description && (
-            <ModalSection icon={<Heart className="w-5 h-5 text-pink-500" />} title="Que necesidades atiende">
+            <ModalSection icon={<Heart className="w-5 h-5 text-pink-500" />} title="Qué necesidades atiende">
               <p className="text-sm text-muted-foreground">{device.needs_description}</p>
             </ModalSection>
           )}
 
           {device.evaluation_criteria && (
-            <ModalSection icon={<ClipboardCheck className="w-5 h-5 text-indigo-500" />} title="Como evaluar o registrar su uso">
+            <ModalSection icon={<ClipboardCheck className="w-5 h-5 text-indigo-500" />} title="Cómo evaluar o registrar su uso">
               <p className="text-sm text-muted-foreground">{device.evaluation_criteria}</p>
             </ModalSection>
           )}

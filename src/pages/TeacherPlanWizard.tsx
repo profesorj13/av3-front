@@ -152,7 +152,7 @@ export function TeacherPlanWizard() {
 
   const handleCreatePlan = async () => {
     if (!coordinationStatus || !coordinationStatus.has_published_document) {
-      alert('No hay documento de coordinacion publicado');
+      alert('No hay documento de coordinación publicado');
       return;
     }
 
@@ -232,7 +232,7 @@ export function TeacherPlanWizard() {
               <div className="space-y-2">
                 <h2 className="title-2-bold text-[#2C2C2C]">Detalles de la clase</h2>
                 <p className="body-2-regular text-[#2C2C2C]">
-                  Revisa la informacion de la clase antes de continuar con la planificacion.
+                  Revisá la información de la clase antes de continuar con la planificación.
                 </p>
               </div>
 
@@ -240,15 +240,15 @@ export function TeacherPlanWizard() {
                 <div className="py-4 space-y-4">
                   <h3 className="headline-1-bold text-secondary-foreground mb-2">Nudos disciplinares</h3>
                   <p className="body-2-regular text-secondary-foreground">
-                    Analisis de las formas de ser y estar humanas en distintos tiempos, espacios y territorios, y de
-                    como esas concepciones se disputan historicamente.
+                    Análisis de las formas de ser y estar humanas en distintos tiempos, espacios y territorios, y de
+                    cómo esas concepciones se disputan históricamente.
                   </p>
                   <p className="body-2-regular text-secondary-foreground">
-                    Estudio de la conquista y colonizacion de America como base del sistema
+                    Estudio de la conquista y colonización de América como base del sistema
                     capitalista-patriarcal-colonial moderno, y de la centralidad europea como proyecto universal.
                   </p>
                   <p className="body-2-regular text-secondary-foreground">
-                    Reflexion sobre los modos de produccion, las relaciones de dominacion sobre cuerpos y territorios, y
+                    Reflexión sobre los modos de producción, las relaciones de dominación sobre cuerpos y territorios, y
                     los procesos sociales que impulsan nuevas relaciones humanas emancipadoras
                   </p>
                 </div>
@@ -256,7 +256,7 @@ export function TeacherPlanWizard() {
                 <div className="h-px bg-[#DAD5F6]" />
 
                 <div className="py-4">
-                  <h3 className="headline-1-bold text-secondary-foreground mb-2">Categorias a trabajar</h3>
+                  <h3 className="headline-1-bold text-secondary-foreground mb-2">Categorías a trabajar</h3>
                   <ul className="space-y-1 list-disc list-inside">
                     {availableCategories.map((c) => (
                       <li key={c.id} className="body-2-regular text-secondary-foreground">
@@ -271,7 +271,7 @@ export function TeacherPlanWizard() {
               <div className="border-t border-[#DAD5F6] pt-6">
                 <h3 className="headline-1-bold text-secondary-foreground mb-2">Objetivo</h3>
                 <p className="body-2-regular text-muted-foreground mb-2">
-                  El objetivo de la clase fue elegido en el itinerario del area. Podes modificarlo si es necesario.
+                  El objetivo de la clase fue elegido en el itinerario del área. Podés modificarlo si es necesario.
                 </p>
                 <Textarea
                   value={lessonWizardData.objective}
@@ -306,7 +306,7 @@ export function TeacherPlanWizard() {
 
                   {/* Apertura Section */}
                   <div className="activity-card-bg rounded-2xl p-4">
-                    <h4 className="body-1-medium text-secondary-foreground mb-2">Apertura/Motivacion</h4>
+                    <h4 className="body-1-medium text-secondary-foreground mb-2">Apertura/Motivación</h4>
                     <div className="flex flex-wrap gap-2 mb-3">
                       {lessonWizardData.moments.apertura.activities?.map((activityId: number) => {
                         const activity = getActivityById(activityId);
@@ -338,7 +338,7 @@ export function TeacherPlanWizard() {
 
                   {/* Desarrollo Section */}
                   <div className="activity-card-bg rounded-2xl p-4">
-                    <h4 className="body-1-medium text-secondary-foreground mb-2">Desarrollo/Construccion</h4>
+                    <h4 className="body-1-medium text-secondary-foreground mb-2">Desarrollo/Construcción</h4>
                     <div className="flex flex-wrap gap-2 mb-3">
                       {lessonWizardData.moments.desarrollo.activities?.map((activityId: number) => {
                         const activity = getActivityById(activityId);
@@ -370,7 +370,7 @@ export function TeacherPlanWizard() {
 
                   {/* Cierre Section */}
                   <div className="activity-card-bg rounded-2xl p-4">
-                    <h4 className="body-1-medium text-secondary-foreground mb-2">Cierre/Metacognicion</h4>
+                    <h4 className="body-1-medium text-secondary-foreground mb-2">Cierre/Metacognición</h4>
                     <div className="flex flex-wrap gap-2 mb-3">
                       {lessonWizardData.moments.cierre.activities?.map((activityId: number) => {
                         const activity = getActivityById(activityId);
@@ -477,7 +477,7 @@ export function TeacherPlanWizard() {
               </div>
               <div className="pt-4 border-t mt-4">
                 <Button onClick={handleConfirmActivities} className="w-full cursor-pointer">
-                  Confirmar seleccion
+                  Confirmar selección
                 </Button>
               </div>
             </DialogContent>
