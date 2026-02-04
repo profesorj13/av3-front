@@ -57,7 +57,7 @@ export function RampDetail() {
           <Icon className="w-7 h-7 text-white" />
         </div>
         <h2 className="large-title-2-bold text-foreground mb-2">{ramp.name}</h2>
-        <p className="body-2-regular text-secondary-foreground max-w-xs">
+        <p className="body-2-regular text-secondary-foreground max-w-xl">
           {ramp.description}
         </p>
       </div>
