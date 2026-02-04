@@ -31,7 +31,7 @@ export function PrimerosPasos() {
         </button>
         <div>
           <h1 className="headline-1-emphasized">Primeros Pasos</h1>
-          <p className="subheadline-regular text-muted-foreground">Valija de Inclusion</p>
+          <p className="subheadline-regular text-muted-foreground">Valija de Inclusión</p>
         </div>
       </div>
 
@@ -39,10 +39,10 @@ export function PrimerosPasos() {
       <div className="flex flex-col items-center px-6 pt-10 pb-8">
         <AnimatedOrb size="md" className="mb-6" />
         <h2 className="large-title-1-regular text-primary text-center mb-2">
-          Conoce la Valija
+          Conocé la Valija
         </h2>
         <p className="body-1-regular text-secondary-foreground text-center max-w-sm">
-          La valija de inclusion cuenta con <span className="font-semibold text-primary">3 rampas adaptativas</span>, cada una con dispositivos pensados para diferentes necesidades del aula.
+          La valija de inclusión cuenta con <span className="font-semibold text-primary">3 rampas adaptativas</span>, cada una con dispositivos pensados para diferentes necesidades del aula.
         </p>
       </div>
 

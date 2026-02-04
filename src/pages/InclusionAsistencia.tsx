@@ -16,7 +16,7 @@ export function InclusionAsistencia() {
   const navigate = useNavigate();
   const chatEndRef = useRef<HTMLDivElement>(null);
   const [messages, setMessages] = useState<UIMessage[]>([
-    { role: 'assistant', content: 'Hola! Contame que esta pasando en el aula y te ayudo a encontrar una solucion.' },
+    { role: 'assistant', content: '¡Hola! Contame qué está pasando en el aula y te ayudo a encontrar una solución.' },
   ]);
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
@@ -68,7 +68,7 @@ export function InclusionAsistencia() {
       setChatHistory((prev) => [...prev, { role: 'user', content: msg }, { role: 'assistant', content: result.response }]);
     } catch (e) {
       console.error('Error:', e);
-      setMessages((prev) => [...prev, { role: 'assistant', content: 'Error al comunicarse con Alicia. Intenta de nuevo.' }]);
+      setMessages((prev) => [...prev, { role: 'assistant', content: 'Error al comunicarse con Alizia. Intentá de nuevo.' }]);
     } finally {
       setIsLoading(false);
     }
@@ -175,7 +175,7 @@ export function InclusionAsistencia() {
                 handleSend();
               }
             }}
-            placeholder="Describi la situacion..."
+            placeholder="Describí la situación..."
             disabled={isLoading}
             rows={1}
             className="flex-1 min-h-[3.5rem] rounded-xl border border-gray-200 px-4 py-4 text-sm text-[#2C2C2C] placeholder:text-[#2C2C2C]/60 focus:outline-none focus:ring-2 focus:ring-primary/20 shadow-md resize-none overflow-hidden"
@@ -199,7 +199,7 @@ export function InclusionAsistencia() {
           </button>
         </div>
         <p className="text-xs text-[#47566C]/60 mt-2 text-center">
-          Alizia puede equivocarse. Siempre verifica la informacion importante antes de tomar decisiones.
+          Alizia puede equivocarse. Siempre verificá la información importante antes de tomar decisiones.
         </p>
       </div>
 
@@ -214,10 +214,10 @@ export function InclusionAsistencia() {
 function StudentMiniCard({ student }: { student: InclusionStudent }) {
   const diffLabels: Record<string, string> = {
     MOTRICIDAD_MANOS_BRAZOS: 'Motricidad manos/brazos',
-    COMUNICACION_EXPRESION: 'Comunicacion/expresion',
-    ATENCION_REGULACION_EMOCIONAL: 'Atencion/regulacion emocional',
-    ACCESO_TECNOLOGIA_DIGITAL: 'Acceso a tecnologia digital',
-    MULTIPLES: 'Multiples dificultades',
+    COMUNICACION_EXPRESION: 'Comunicación/expresión',
+    ATENCION_REGULACION_EMOCIONAL: 'Atención/regulación emocional',
+    ACCESO_TECNOLOGIA_DIGITAL: 'Acceso a tecnología digital',
+    MULTIPLES: 'Múltiples dificultades',
     SIN_DEFINIR: 'Sin definir',
   };
 
@@ -231,7 +231,7 @@ function StudentMiniCard({ student }: { student: InclusionStudent }) {
           <p className="text-sm font-semibold">{student.name}</p>
           {student.is_transitory !== undefined && (
             <p className="text-xs text-muted-foreground">
-              {student.is_transitory ? 'Condicion transitoria' : 'Condicion permanente'}
+              {student.is_transitory ? 'Condición transitoria' : 'Condición permanente'}
             </p>
           )}
         </div>
@@ -327,19 +327,19 @@ function DeviceDetailModal({ device, onClose }: { device: Device; onClose: () =>
         {/* Sections */}
         <div className="p-4 space-y-3">
           {device.classroom_benefit && (
-            <ModalSection icon={<Sparkles className="w-5 h-5 text-primary" />} title="Para que te puede ayudar en clase">
+            <ModalSection icon={<Sparkles className="w-5 h-5 text-primary" />} title="Para qué te puede ayudar en clase">
               <p className="text-sm text-muted-foreground">{device.classroom_benefit}</p>
             </ModalSection>
           )}
 
           {device.how_to_use && (
-            <ModalSection icon={<BookOpen className="w-5 h-5 text-primary" />} title="Como usar">
+            <ModalSection icon={<BookOpen className="w-5 h-5 text-primary" />} title="Cómo usar">
               <p className="text-sm text-muted-foreground">{device.how_to_use}</p>
             </ModalSection>
           )}
 
           {device.rationale && (
-            <ModalSection icon={<GraduationCap className="w-5 h-5 text-emerald-500" />} title="Enfoque pedagogico">
+            <ModalSection icon={<GraduationCap className="w-5 h-5 text-emerald-500" />} title="Enfoque pedagógico">
               <p className="text-sm text-muted-foreground">{device.rationale}</p>
             </ModalSection>
           )}
@@ -351,13 +351,13 @@ function DeviceDetailModal({ device, onClose }: { device: Device; onClose: () =>
           )}
 
           {device.needs_description && (
-            <ModalSection icon={<Heart className="w-5 h-5 text-pink-500" />} title="Que necesidades atiende">
+            <ModalSection icon={<Heart className="w-5 h-5 text-pink-500" />} title="Qué necesidades atiende">
               <p className="text-sm text-muted-foreground">{device.needs_description}</p>
             </ModalSection>
           )}
 
           {device.evaluation_criteria && (
-            <ModalSection icon={<ClipboardCheck className="w-5 h-5 text-indigo-500" />} title="Como evaluar o registrar su uso">
+            <ModalSection icon={<ClipboardCheck className="w-5 h-5 text-indigo-500" />} title="Cómo evaluar o registrar su uso">
               <p className="text-sm text-muted-foreground">{device.evaluation_criteria}</p>
             </ModalSection>
           )}

@@ -29,29 +29,29 @@ interface SourceOption {
 const resourceOptions: ResourceOption[] = [
   {
     type: 'course_sheet',
-    label: 'Ficha de catedra',
-    description: 'Documento con informacion de la materia, contenidos y objetivos',
+    label: 'Ficha de cátedra',
+    description: 'Documento con información de la materia, contenidos y objetivos',
     icon: <FileText className="w-8 h-8" />,
     enabled: true,
   },
   {
     type: 'lecture_guide',
-    label: 'Guia de lectura',
-    description: 'Guia con preguntas orientadoras y actividades de lectura',
+    label: 'Guía de lectura',
+    description: 'Guía con preguntas orientadoras y actividades de lectura',
     icon: <BookOpen className="w-8 h-8" />,
     enabled: true,
   },
   {
     type: 'news_analysis',
     label: 'Analizar noticias',
-    description: 'Analisis critico de noticias actuales',
+    description: 'Análisis crítico de noticias actuales',
     icon: <Newspaper className="w-8 h-8" />,
     enabled: false,
   },
   {
     type: 'art_analysis',
     label: 'Analizar obras de Arte',
-    description: 'Analisis de obras artisticas y su contexto',
+    description: 'Análisis de obras artísticas y su contexto',
     icon: <Palette className="w-8 h-8" />,
     enabled: false,
   },
@@ -74,11 +74,11 @@ const resourceOptions: ResourceOption[] = [
 const sourceOptions: SourceOption[] = [
   {
     id: 'source_1',
-    name: 'La importancia de la revolucion neolitica en la aparicion de nuevas formas de gestion del territorio y de sus recursos',
+    name: 'La importancia de la revolución neolítica en la aparición de nuevas formas de gestión del territorio y de sus recursos',
   },
   {
     id: 'source_2',
-    name: 'Economias otras para unas ciencias sociales, politicas y economicas decoloniales y emancipatorias',
+    name: 'Economías otras para unas ciencias sociales, políticas y económicas decoloniales y emancipatorias',
   },
   {
     id: 'source_3',
@@ -181,7 +181,7 @@ export function CreateResourceModal({ isOpen, onClose }: CreateResourceModalProp
                   {option.label}
                 </h3>
                 <p className="text-xs text-muted-foreground text-center">
-                  {option.enabled ? option.description : 'Proximamente'}
+                  {option.enabled ? option.description : 'Próximamente'}
                 </p>
               </button>
             ))}

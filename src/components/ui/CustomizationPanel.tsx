@@ -31,9 +31,9 @@ export function CustomizationPanel({
   const [isExpanded, setIsExpanded] = useState(false);
 
   const momentLabels = {
-    apertura: 'Apertura/Motivacion',
-    desarrollo: 'Desarrollo/Construccion',
-    cierre: 'Cierre/Metacognicion',
+    apertura: 'Apertura/Motivación',
+    desarrollo: 'Desarrollo/Construcción',
+    cierre: 'Cierre/Metacognición',
   };
 
   return (
@@ -59,7 +59,7 @@ export function CustomizationPanel({
             <Textarea
               value={customInstruction}
               onChange={(e) => onCustomInstructionChange(e.target.value)}
-              placeholder="Agrega instrucciones especificas para esta clase (ej: 'Enfocarse en ejemplos practicos', 'Incluir actividad grupal')..."
+              placeholder="Agregá instrucciones específicas para esta clase (ej: 'Enfocarse en ejemplos prácticos', 'Incluir actividad grupal')..."
               className="min-h-[80px] resize-none"
             />
           </div>

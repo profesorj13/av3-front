@@ -103,7 +103,7 @@ export function TeacherLessonPlan() {
       }
     } catch (e) {
       console.error('Error sending teacher chat message:', e);
-      addTeacherChatMessage({ role: 'assistant', content: 'Lo siento, hubo un error. Intenta de nuevo.' });
+      addTeacherChatMessage({ role: 'assistant', content: 'Lo siento, hubo un error. Intentá de nuevo.' });
     } finally {
       setIsGenerating(false);
     }

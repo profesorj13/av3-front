@@ -160,7 +160,7 @@ export function Login() {
             <div className="flex flex-col items-center">
               <AnimatedOrb size="md" className="mb-4" />
               <h2 className="title-1-regular text-primary">Bienvenido a Alizia</h2>
-              <h3 className="title-2-regular text-muted-foreground">Selecciona tu perfil para comenzar</h3>
+              <h3 className="title-2-regular text-muted-foreground">Seleccioná tu perfil para comenzar</h3>
             </div>
           </div>
         </div>
@@ -183,7 +183,7 @@ export function Login() {
                   </div>
                   <div className="text-center">
                     <h2 className="body-1-medium text-[#10182B]">Coordinadores</h2>
-                    <p className="text-xs text-[#47566C]">Gestiona áreas y docentes</p>
+                    <p className="text-xs text-[#47566C]">Gestioná áreas y docentes</p>
                   </div>
                 </div>
 
@@ -217,7 +217,7 @@ export function Login() {
                   </div>
                   <div className="text-center">
                     <h2 className="body-1-medium text-[#10182B]">Docentes</h2>
-                    <p className="text-xs text-[#47566C]">Planifica y gestiona tus clases</p>
+                    <p className="text-xs text-[#47566C]">Planificá y gestioná tus clases</p>
                   </div>
                 </div>
 

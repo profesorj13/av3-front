@@ -7,8 +7,8 @@ import { api } from '@/services/api';
 import type { Resource, ChatMessage } from '@/types';
 
 const SOURCE_NAMES: Record<string, string> = {
-  source_1: 'La importancia de la revolucion neolitica',
-  source_2: 'Economias otras - Ciencias decoloniales',
+  source_1: 'La importancia de la revolución neolítica',
+  source_2: 'Economías otras - Ciencias decoloniales',
   source_3: 'Fuente 3',
   source_4: 'Fuente 4',
   source_5: 'Fuente 5',
@@ -55,7 +55,7 @@ export function ResourceEditor() {
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
       const sourceName = sourceId ? SOURCE_NAMES[sourceId] || 'Recurso' : '';
-      const typeLabel = type === 'lecture_guide' ? 'Guia de Lectura' : 'Ficha de Catedra';
+      const typeLabel = type === 'lecture_guide' ? 'Guía de Lectura' : 'Ficha de Cátedra';
       const defaultTitle = sourceName ? `${typeLabel} - ${sourceName}` : typeLabel;
 
       const newResource = await api.resources.create({
@@ -134,7 +134,7 @@ export function ResourceEditor() {
     setTimeout(() => {
       const assistantMessage: ChatMessage = {
         role: 'assistant',
-        content: 'Esta funcionalidad de chat para recursos estara disponible proximamente. Por ahora, podes editar el contenido directamente en el editor.',
+        content: 'Esta funcionalidad de chat para recursos estará disponible próximamente. Por ahora, podés editar el contenido directamente en el editor.',
       };
       setChatHistory((prev) => [...prev, assistantMessage]);
     }, 1000);
@@ -143,9 +143,9 @@ export function ResourceEditor() {
   const getResourceTypeLabel = (resourceType: string) => {
     switch (resourceType) {
       case 'lecture_guide':
-        return 'Guia de Lectura';
+        return 'Guía de Lectura';
       case 'course_sheet':
-        return 'Ficha de Catedra';
+        return 'Ficha de Cátedra';
       default:
         return 'Recurso';
     }
@@ -205,7 +205,7 @@ export function ResourceEditor() {
             placeholder="Pregunta sobre el recurso..."
             welcomeMessage={{
               title: 'Editor de recursos',
-              content: 'Podes editar el contenido directamente. El chat con IA estara disponible proximamente.',
+              content: 'Podés editar el contenido directamente. El chat con IA estará disponible próximamente.',
             }}
             isCollapsed={isChatCollapsed}
             onToggleCollapse={() => setIsChatCollapsed(!isChatCollapsed)}
@@ -223,7 +223,7 @@ export function ResourceEditor() {
                   value={titleValue}
                   onChange={(e) => setTitleValue(e.target.value)}
                   className="headline-1-bold text-[#10182B] bg-transparent border-b-2 border-blue-500 focus:outline-none focus:border-blue-600 px-1 py-0 flex-1"
-                  placeholder="Titulo del recurso"
+                  placeholder="Título del recurso"
                   autoFocus
                 />
                 <button
@@ -268,7 +268,7 @@ export function ResourceEditor() {
               onChange={(e) => handleContentChange(e.target.value)}
               onBlur={handleContentBlur}
               className="w-full h-full p-4 border border-gray-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-primary/20 font-mono text-sm leading-relaxed"
-              placeholder="Escribe el contenido del recurso en formato Markdown..."
+              placeholder="Escribí el contenido del recurso en formato Markdown..."
             />
           </div>
         </div>

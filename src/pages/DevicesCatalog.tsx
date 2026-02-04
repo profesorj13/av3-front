@@ -60,7 +60,7 @@ export function DevicesCatalog() {
         </button>
         <div>
           <h1 className="headline-1-emphasized">Dispositivos</h1>
-          <p className="subheadline-regular text-muted-foreground">Catalogo de la valija de inclusion</p>
+          <p className="subheadline-regular text-muted-foreground">Catálogo de la valija de inclusión</p>
         </div>
       </div>
 

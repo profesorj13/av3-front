@@ -59,9 +59,9 @@ export function Resources() {
   const getResourceTypeLabel = (type: string) => {
     switch (type) {
       case 'lecture_guide':
-        return 'Guia de lectura';
+        return 'Guía de lectura';
       case 'course_sheet':
-        return 'Ficha de catedra';
+        return 'Ficha de cátedra';
       default:
         return type;
     }
@@ -73,7 +73,7 @@ export function Resources() {
         <AnimatedOrb size="lg" className="mb-8" />
 
         <h2 className="large-title-1-regular text-primary">Recursos</h2>
-        <h3 className="large-title-2-regular">Crea y gestiona tus recursos educativos</h3>
+        <h3 className="large-title-2-regular">Creá y gestioná tus recursos educativos</h3>
       </div>
 
       <div className="w-full max-w-5xl">
@@ -116,9 +116,9 @@ export function Resources() {
           {!isLoading && resources.length === 0 && (
             <div className="col-span-full text-center py-12">
               <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">No tienes recursos creados</p>
+              <p className="text-muted-foreground">No tenés recursos creados</p>
               <p className="text-sm text-muted-foreground mt-2">
-                Haz clic en "Crear recurso" para comenzar
+                Hacé clic en "Crear recurso" para comenzar
               </p>
             </div>
           )}
